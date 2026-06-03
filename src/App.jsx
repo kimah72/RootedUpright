@@ -100,6 +100,8 @@ useEffect(() => {
               <label className="field-label" htmlFor="watchFor">Watch For</label>
               <input className="field" id="watchFor" name="watchFor" placeholder="warning signs..." value={form.watchFor} onChange={handleChange} />
             </div>
+          </div>
+          <div className="form-submit">
             <button className="btn-lime" onClick={handleAddPlant}>Add_Specimen</button>
           </div>
       </section>

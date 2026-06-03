@@ -55,3 +55,18 @@ Tasks:
   - Add plant form with labels ✅
   - WAVE accessibility pass — no errors ✅
   - Anna and Elsa live in the lab 🌿 ✅
+
+  ## Tuesday June 2, 2026
+Start: 4:16 PM MST
+Stop: 6:16 PM MST
+Total: 2 hrs
+
+Tasks:
+  - Fixed cultivar reset bug in handleAddPlant ✅
+  - Added watchFor field to Lambda + UI ✅
+  - Wired Edit button with inline edit form ✅
+  - Bulk imported full plant collection ✅
+  - Updated Anna and Elsa with cultivar and lore ✅
+  - Added Stacy's Mom, Goldie, Rosalind, Thumbelina ✅
+  - Edited Thumbelina with species and care info ✅
+  - Pushed to GitHub ✅

@@ -72,6 +72,12 @@
   align-items: center;
 }
 
+/* ── Form submit row ── */
+
+.form-submit {
+  margin-top: 0.75rem;
+}
+
 /* ── Fields ── */
 
 .field {
