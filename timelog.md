@@ -29,7 +29,7 @@ Tasks:
   - Created rooted-deleteCareLog Lambda function ✅
   - All 8 Lambda functions tested and working ✅
 
-  ## Friday May 29, 2026
+## Friday May 29, 2026
 Start: 4:30 PM MST
 Stop: 6:15 PM MST
 Total: 1 hr 45 min
@@ -41,3 +41,17 @@ Tasks:
   - Installed axios ✅
   - Built plant display and add form in App.jsx ✅
   - Anna and Elsa both live in the app ✅
+
+## Saturday May 31, 2026
+Start: 1:15 PM MST
+Stop: 3:10 PM MST
+Total: 1 hr 55 min
+
+Tasks:
+  - Designed and implemented cyberpunk botanical UI ✅
+  - Toxic Lime color palette + CSS variables ✅
+  - Background layers (void, scanlines, grid) ✅
+  - Specimen cards with corner brackets ✅
+  - Add plant form with labels ✅
+  - WAVE accessibility pass — no errors ✅
+  - Anna and Elsa live in the lab 🌿 ✅

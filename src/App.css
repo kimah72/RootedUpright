@@ -266,6 +266,30 @@
   margin-bottom: 1rem;
 }
 
+/* ── Cultivar — variety name, softer than species ── */
+
+.card-cultivar {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--text-ghost);
+  margin-top: -0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Edit form inside card ── */
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-editing {
+  border-color: var(--border-bright);
+  box-shadow: var(--glow);
+}
+
 .card-divider {
   height: 1px;
   background: var(--border);
