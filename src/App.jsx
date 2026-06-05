@@ -9,6 +9,18 @@ function App() {
     // tracks which plant is currently being edited (null = none)
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+
+  // tracks which plant is logging care (null = none)
+  const [loggingId, setLoggingId] = useState(null);
+  const [careForm, setCareForm] = useState({
+    careType: "",
+    notes: "",
+  });
+
+  // tracks which plant's care log is expanded (null = none)
+  const [viewingLogsId, setViewingLogsId] = useState(null);
+  const [careLogs, setCareLogs] = useState([]);
+
   const [form, setForm] = useState({
       name: "",
       species: "",
@@ -58,6 +70,29 @@ useEffect(() => {
     await axios.put(`${API}/plants`, { plantId, ...editForm });
     setEditingId(null);
     fetchPlants();
+  };
+
+  // submit a care log entry for a plant
+  const handleLogCare = async (plantId) => {
+    await axios.post(`${API}/carelogs`, {
+      plantId,
+      careType: careForm.careType,
+      notes: careForm.notes,
+    });
+    setLoggingId(null);
+    setCareForm({ careType: "", notes: "" });
+  };
+
+  // fetch care logs for a specific plant and toggle the timeline view
+  const handleViewLogs = async (plantId) => {
+    if (viewingLogsId === plantId) {
+      setViewingLogsId(null);
+      setCareLogs([]);
+      return;
+    }
+    const res = await axios.get(`${API}/carelogs?plantId=${plantId}`);
+    setCareLogs(res.data);
+    setViewingLogsId(plantId);
   };
 
  return (
@@ -191,9 +226,62 @@ useEffect(() => {
 
                   <div className="card-actions">
                     <button className="btn-lime-sm" onClick={() => handleEditOpen(plant)}>Edit</button>
-                    <button className="btn-magenta-sm">Log_Care</button>
+                    <button className="btn-lime-sm" onClick={() => handleViewLogs(plant.plantId)}>
+                      {viewingLogsId === plant.plantId ? "Hide_Log" : "View_Log"}
+                    </button>
+                    <button className="btn-magenta-sm" onClick={() => setLoggingId(plant.plantId)}>Log_Care</button>
                   </div>
-                </>
+
+                  {/* ── Care Log Form — shows inline when Log_Care is clicked ── */}
+                  {loggingId === plant.plantId && (
+                    <div className="care-log-form">
+                      <div className="field-group">
+                        <label className="field-label" htmlFor={`care-type-${plant.plantId}`}>Care Type</label>
+                        <select className="field" id={`care-type-${plant.plantId}`} value={careForm.careType} onChange={(e) => setCareForm({...careForm, careType: e.target.value})}>
+                          <option value="">select type...</option>
+                          <option value="Watering">Watering</option>
+                          <option value="Fertilizing">Fertilizing</option>
+                          <option value="Repotting">Repotting</option>
+                          <option value="Pruning">Pruning</option>
+                          <option value="Leaf Cleaning">Leaf Cleaning</option>
+                          <option value="Drama">Drama ⚠</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="field-group">
+                        <label className="field-label" htmlFor={`care-notes-${plant.plantId}`}>Notes</label>
+                        <input className="field" id={`care-notes-${plant.plantId}`} placeholder="what happened..." value={careForm.notes} onChange={(e) => setCareForm({...careForm, notes: e.target.value})} />
+                      </div>
+                      <div className="card-actions">
+                        <button className="btn-magenta-sm" onClick={() => handleLogCare(plant.plantId)}>Save_Log</button>
+                        <button className="btn-lime-sm" onClick={() => setLoggingId(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* ── Care Log Timeline ── */}
+                  {viewingLogsId === plant.plantId && (
+                    <div className="care-timeline">
+                      <p className="timeline-label">// CARE_LOG</p>
+                      {careLogs.length === 0 ? (
+                        <p className="timeline-empty">no entries yet</p>
+                      ) : (
+                        <div className="timeline-list">
+                          {careLogs.map((log) => (
+                            <div key={log.logId} className="timeline-entry">
+                              <div className={`timeline-dot ${log.careType === "Drama" ? "dot-magenta" : "dot-lime"}`} />
+                              <div className="timeline-content">
+                                <span className="timeline-type">{log.careType}</span>
+                                <span className="timeline-date">{new Date(log.dateLogged).toLocaleDateString()}</span>
+                                {log.notes && <p className="timeline-notes">{log.notes}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>                
               )}
             </div>
           ))}
