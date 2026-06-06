@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import './App.css';
 
 const API = import.meta.env.VITE_API_URL;
 
 function App() {
+
+  // Cognito auth hook
+  const auth = useAuth();
+
+  // sign out via Cognito hosted UI
+  const signOutRedirect = () => {
+    const clientId = "3isil38pk3rjglpvp0vse9q764";
+    const logoutUri = "http://localhost:5174";
+    const cognitoDomain = "https://us-east-1yhc7cmv1o.auth.us-east-1.amazoncognito.com";
+    auth.removeUser();
+    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
+  };
+
   const [plants, setPlants] = useState([]);
     // tracks which plant is currently being edited (null = none)
   const [editingId, setEditingId] = useState(null);
@@ -31,24 +45,31 @@ function App() {
     });
 
   const fetchPlants = async () => {
-    const res = await axios.get(`${API}/plants`);
+    const userId = auth.user?.profile.sub;
+    console.log("My userId:", userId);
+    const res = await axios.get(`${API}/plants?userId=${userId}`);
     setPlants(res.data);
   };
 
-useEffect(() => {
-    const loadPlants = async () => {
-      await fetchPlants();
-    };
-    loadPlants();
-  }, []);
+  useEffect(() => {
+      const loadPlants = async () => {
+        await fetchPlants();
+      };
+      if (auth.user) {
+        loadPlants();
+      }
+    }, [auth.user]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleAddPlant = async () => {
-    await axios.post(`${API}/plants`, form);
-    setForm({ name: "", species: "", cultivar: "", lore: "", careInstructions: "" });
+    await axios.post(`${API}/plants`, {
+      ...form,
+      userId: auth.user?.profile.sub,
+    });
+    setForm({ name: "", species: "", cultivar: "", lore: "", careInstructions: "", watchFor: "" });
     fetchPlants();
   };
 
@@ -95,6 +116,33 @@ useEffect(() => {
     setViewingLogsId(plantId);
   };
 
+  // show loading state while Cognito initializes
+  if (auth.isLoading) {
+    return <div className="auth-status">// INITIALIZING...</div>;
+  }
+
+  // show error if auth fails
+  if (auth.error) {
+    return <div className="auth-status">// ERROR: {auth.error.message}</div>;
+  }
+
+  // if not authenticated, show sign in screen
+  if (!auth.isAuthenticated) {
+    return (
+      <main className="auth-screen">
+        <div className="auth-card">
+          <p className="site-eyebrow">// ROOTED_UPRIGHT™</p>
+          <h1 className="site-title">Plant Management System</h1>
+          <div className="site-divider" />
+          <p className="auth-prompt">AUTHENTICATION REQUIRED</p>
+          <button className="btn-lime" onClick={() => auth.signinRedirect()}>
+            Sign_In
+          </button>
+        </div>
+      </main>
+    );
+  }
+
  return (
     <main>
 
@@ -102,7 +150,10 @@ useEffect(() => {
       <header className="site-header">
         <span className="site-eyebrow">// ROOTED_UPRIGHT™</span>
         <h1 className="site-title">Plant Management System</h1>
-        <span className="site-version">v0.1.0</span>
+        <div className="header-right">
+          <span className="site-version">v0.1.0</span>
+          <button className="btn-magenta-sm" onClick={signOutRedirect}>Sign_Out</button>
+        </div>
       </header>
 
       <div className="site-divider" />
@@ -258,7 +309,7 @@ useEffect(() => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* ── Care Log Timeline ── */}
                   {viewingLogsId === plant.plantId && (
                     <div className="care-timeline">

@@ -9,6 +9,14 @@
   margin: 0 auto;
 }
 
+/* ── Header right — version + sign out ── */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .site-eyebrow {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.75rem;
@@ -363,6 +371,7 @@ select.field option {
 }
 
 /* timeline dot colors */
+
 .timeline-dot {
   width: 8px;
   height: 8px;
@@ -463,6 +472,44 @@ select.field option {
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+/* ── Auth Screen ── */
+
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.auth-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  position: relative;
+}
+
+.auth-prompt {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 4px;
+  color: var(--magenta);
+  text-shadow: 0 0 8px var(--magenta);
+}
+
+.auth-status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  padding: 2rem;
 }
 
 /* ── Responsive ── */
