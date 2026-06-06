@@ -70,3 +70,15 @@ Tasks:
   - Added Stacy's Mom, Goldie, Rosalind, Thumbelina ✅
   - Edited Thumbelina with species and care info ✅
   - Pushed to GitHub ✅
+
+  ## Friday June 5, 2026
+Start: 3:45 PM MST
+Stop: 9:07 PM MST
+Total: 5 hrs 22 min
+
+Tasks:
+  - Wired Log_Care button with inline care log form ✅
+  - Built care log timeline with spine ✅
+  - Implemented Cognito user authentication ✅
+  - Added userId filtering for multi-user support ✅
+  - Updated all 28 plants with userI
