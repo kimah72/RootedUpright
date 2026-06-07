@@ -45,6 +45,13 @@ specific plant.
 - **Authentication:** AWS Cognito with react-oidc-context
 - **AWS SDK:** @aws-sdk/client-dynamodb, @aws-sdk/lib-dynamodb
 
+# Test Credentials
+
+To access the application, use the following test account:
+
+- **Email:** testuser@rootedupright.com  
+- **Password:** RootedUpright1!
+
 # Useful Websites
 
 - [AWS DynamoDB Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)
