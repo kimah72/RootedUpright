@@ -17,7 +17,7 @@ To use the app: sign in with your credentials, browse your specimen catalog, add
 using the Add_Specimen form, click Edit to update any plant, click Log_Care to record a care 
 event, and click View_Log to see the care timeline for any plant.
 
-[Software Demo Video](https://youtu.be/jIkwwpJBeXM)
+[Rooted Upright](https://youtu.be/jIkwwpJBeXM)
 
 # Cloud Database
 
