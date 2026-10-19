@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -6,29 +6,44 @@
   padding: 0;
 }
 
+/* ── Toxic Lime tokens ──
+   Lime stays the brand color, but it's now saved for things you can act on
+   (buttons, active states). Body text moved to softer, brighter greens so
+   it's easy to read at normal sizes instead of glowing everywhere. */
 :root {
   --lime: #aaff00;
-  --lime-dim: #88cc00;
+  --lime-soft: #d8ff99;
   --amber: #ffb000;
-  --amber-dim: #cc8d00;
-  --void: #080d00;
-  --void2: #0d1a00;
-  --panel: rgba(8,20,0,0.95);
-  --text: #c8f080;
-  --text-dim: #7ab840;
-  --text-ghost: #3a5020;
-  --border: rgba(170,255,0,0.2);
-  --border-bright: rgba(170,255,0,0.5);
-  --glow: 0 0 16px rgba(170,255,0,0.4);
-  --glow-sm: 0 0 8px rgba(170,255,0,0.3);
+  --amber-soft: #ffd27a;
+  --magenta: #ff4dff;
+  --magenta-soft: #ff8cff;
+
+  --void: #070b01;
+  --surface: #0f1a05;      /* cards, sheets */
+  --surface-2: #142209;    /* photo placeholders, inputs */
+  --scrim: rgba(5, 8, 0, 0.84); /* name bar over photos */
+
+  --text: #ecf8d8;         /* headings, names */
+  --text-2: #b5d394;       /* secondary text — passes 4.5:1 on --surface */
+  --text-3: #9cc46a;       /* small mono labels */
+
+  --line: rgba(170, 255, 0, 0.16);
+  --line-strong: rgba(170, 255, 0, 0.35);
+  --glow: 0 0 24px rgba(170, 255, 0, 0.4);
+
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
 }
 
 body {
   background: var(--void);
   font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -40,56 +55,48 @@ ul {
   list-style: none;
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--void); }
-::-webkit-scrollbar-thumb { 
-  background: var(--lime); 
-  box-shadow: 0 0 8px var(--lime); 
+button {
+  font: inherit;
+  color: inherit;
 }
 
-/* Background layers — fixed, stacked, pointer-events off so they don't block clicks */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--line-strong); }
 
+/* Background — the greenhouse photo stays, just darker, so the plant photos
+   on the cards are what draws the eye. (The scanline and grid overlays were
+   removed from main.jsx; they made the whole app read as "retro terminal".) */
 .bg-void {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-
-  /* Dark forest greenhouse image with heavy overlay */
   background:
-    linear-gradient(rgba(8,13,0,0.88), rgba(8,13,0,0.88)),
+    linear-gradient(rgba(7, 11, 1, 0.94), rgba(7, 11, 1, 0.94)),
     url('https://images.unsplash.com/photo-1545165375-b5f502422c66?w=1600')
     center/cover fixed;
 }
 
-/* Scanlines — same fingerprint as time_and_space but lime flavored */
-.bg-scanlines {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px, transparent 3px,
-    rgba(170,255,0,0.02) 3px, rgba(170,255,0,0.02) 4px
-  );
-}
-
-/* Subtle grid overlay — gives it that lab/specimen feel */
-.bg-grid {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(170,255,0,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(170,255,0,0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* All real content sits above the bg layers */
+/* All real content sits above the background layer */
 main {
   position: relative;
   z-index: 10;
-  padding-top: 80px;
+}
+
+/* Hidden visually but still read by screen readers — used for labels the
+   design shows with an icon instead of text */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* Keyboard users get a clear lime ring; mouse/touch users don't see it */
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
 }

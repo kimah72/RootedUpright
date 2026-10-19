@@ -16,10 +16,9 @@ const cognitoAuthConfig = {
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    {/* Background layers */}
+    {/* Background layer — scanlines and grid overlay removed in the UI
+        refresh so the plant photos carry the look instead */}
     <div className="bg-void" />
-    <div className="bg-scanlines" />
-    <div className="bg-grid" />
     <AuthProvider {...cognitoAuthConfig}>
       <App />
     </AuthProvider>

@@ -1,723 +1,375 @@
-/* Site Header */
+/* ════════════════════════════════════════════════════════════════
+   Rooted Upright — Direction D (A + C hybrid)
+   Phone-first: everything is laid out for a ~390px screen, then the
+   media queries at the bottom widen it for tablets and desktop.
+   ════════════════════════════════════════════════════════════════ */
 
-.site-header {
+/* ── App shell ── */
+
+.app-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  /* bottom padding keeps the last cards clear of the floating bottom bar */
+  padding: 0 20px 128px;
+}
+
+/* ── Header ── */
+
+.app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2rem 3rem 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 48px 0 12px;
 }
 
-/* ── Header right — version + sign out ── */
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.site-eyebrow {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 4px;
-  color: var(--text-dim);
-}
-
-.site-title {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: var(--lime);
-  text-shadow: var(--glow-sm);
-}
-
-.site-version {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 3px;
-  color: var(--text-dim);
-}
-
-/* Dividers */
-.site-divider {
-  max-width: 1200px;
-  margin: 0 auto 2rem;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(170,255,0,0.3),
-    transparent
-  );
-}
-
-/* ── Section Labels ── */
-
-.section-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 5px;
-  color: var(--amber);
-  text-shadow: 0 0 8px var(--amber);
-  margin-bottom: 1.5rem;
-}
-
-/* ── Add Plant Form ── */
-
-.add-plant-section {
-  max-width: 1200px;
-  margin: 0 auto 3rem;
-  padding: 0 3rem;
-}
-
-.add-plant-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-/* ── Form submit row ── */
-
-.form-submit {
-  margin-top: 0.75rem;
-}
-
-/* ── Fields ── */
-
-.field {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  background: rgba(170,255,0,0.04);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 0.6rem 1rem;
-  border-radius: 2px;
-  outline: none;
-  transition: all 0.2s;
-  flex: 1;
-  min-width: 180px;
-}
-
-.field::placeholder {
-  color: var(--text-ghost);
-}
-
-.field:focus {
-  border-color: var(--lime);
-  box-shadow: var(--glow-sm);
-  background: rgba(170,255,0,0.08);
-}
-
-/* ── Field Groups — wraps label + input together ── */
-
-.field-group {
+.app-header-text {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  min-width: 180px;
+  gap: 2px;
 }
 
-.field-label {
+.app-date {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  color: var(--text-dim);
-}
-
-/* ── Select field — matches input styling ── */
-
-.field select, select.field {
-  appearance: none;
-  cursor: pointer;
-}
-
-/* ── Select dropdown options — override browser defaults ── */
-
-select.field option {
-  background: var(--void2);
-  color: var(--text);
-}
-
-/* ── Buttons ── */
-
-.btn-lime {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 0.7rem 1.5rem;
-  border: 1px solid var(--lime);
-  color: var(--lime);
-  background: rgba(170,255,0,0.08);
-  text-shadow: var(--glow-sm);
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-amber {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 0.7rem 1.5rem;
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  background: rgba(255,176,0,0.08);
-  text-shadow: 0 0 8px var(--amber);
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-amber:hover {
-  background: rgba(255,176,0,0.2);
-  box-shadow: 0 0 16px rgba(255,176,0,0.4);
-  transform: translateY(-2px);
-}
-
-.btn-lime:hover {
-  background: rgba(170,255,0,0.2);
-  box-shadow: var(--glow);
-  transform: translateY(-2px);
-}
-
-.btn-lime-sm {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 12px;
   letter-spacing: 2px;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--border);
+  color: var(--text-3);
+}
+
+/* Orbitron is kept only for the wordmark — one strong brand moment
+   instead of the whole UI shouting in it */
+.app-wordmark {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 1px;
   color: var(--lime);
-  background: rgba(170,255,0,0.06);
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-lime-sm:hover {
-  border-color: var(--lime);
-  box-shadow: var(--glow-sm);
-}
-
-.btn-amber-sm {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid rgba(255,176,0,0.3);
-  color: var(--amber);
-  background: rgba(255,176,0,0.06);
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-amber-sm:hover {
-  border-color: var(--amber);
-  box-shadow: 0 0 12px rgba(255,176,0,0.4);
-}
-
-/* ── Plant Grid ── */
-
-.catalog-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 3rem 4rem;
-}
-
-.plant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-/* ── Plant Card ── */
-
-.plant-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 1.5rem;
+.account {
   position: relative;
-  overflow: hidden;
-  transition: all 0.3s;
 }
 
-.plant-card:hover {
-  border-color: var(--border-bright);
-  box-shadow: var(--glow);
-  transform: translateY(-4px);
-}
-
-/* top lime accent bar */
-.card-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--lime);
-  box-shadow: 0 0 10px var(--lime);
-}
-
-/* corner bracket top-left */
-.bracket-tl {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 16px;
-  height: 16px;
-  border-top: 1.5px solid var(--lime);
-  border-left: 1.5px solid var(--lime);
-}
-
-/* corner bracket bottom-right */
-.bracket-br {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 16px;
-  height: 16px;
-  border-bottom: 1.5px solid var(--lime);
-  border-right: 1.5px solid var(--lime);
-}
-
-.card-eyebrow {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 4px;
-  color: var(--lime);
-  margin-bottom: 0.75rem;
-}
-
-.card-name {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--lime);
-  text-shadow: var(--glow-sm);
-  margin-bottom: 0.25rem;
-}
-
-.card-species {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 2px;
-  color: var(--text-dim);
-  margin-bottom: 1rem;
-}
-
-/* ── Cultivar — variety name, softer than species ── */
-
-.card-cultivar {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  color: var(--text-ghost);
-  margin-top: -0.75rem;
-  margin-bottom: 1rem;
-}
-
-/* ── Care Log Form — inline below card actions ── */
-
-.care-log-form {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255,176,0,0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* ── Care Log Timeline ── */
-
-.care-timeline {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(170,255,0,0.15);
-}
-
-.timeline-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 4px;
-  color: var(--amber);
-  text-shadow: 0 0 8px var(--amber);
-  margin-bottom: 1rem;
-}
-
-.timeline-empty {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  color: var(--text-ghost);
-}
-
-/* ── Timeline spine — vertical line connecting dots ── */
-
-.timeline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  position: relative;
-  padding-left: 1rem;
-}
-
-.timeline-list::before {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 8px;
-  bottom: 8px;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    var(--lime),
-    rgba(170,255,0,0.1)
-  );
-}
-
-.timeline-entry {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-/* timeline dot colors */
-
-.timeline-dot {
-  width: 8px;
-  height: 8px;
+.avatar-btn {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.dot-lime {
-  background: var(--lime);
-  box-shadow: 0 0 6px var(--lime);
-}
-
-.dot-amber {
-  background: var(--amber);
-  box-shadow: 0 0 6px var(--amber);
-}
-
-.timeline-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.timeline-type {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
+  border: 1px solid var(--line-strong);
+  background: rgba(170, 255, 0, 0.08);
   color: var(--lime);
-}
-
-.timeline-date {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  color: var(--text-ghost);
-}
-
-.timeline-notes {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  color: var(--text-dim);
-  margin-top: 0.2rem;
-}
-
-/* ── Edit form inside card ── */
-
-.edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card-editing {
-  border-color: var(--border-bright);
-  box-shadow: var(--glow);
-}
-
-/* ── Needs-attention highlight — amber accent bar instead of the usual lime ── */
-
-.card-attention {
-  border-color: rgba(255,176,0,0.4);
-}
-
-.card-attention .card-accent {
-  background: var(--amber);
-  box-shadow: 0 0 10px var(--amber);
-}
-
-.attention-flag {
-  display: inline-flex;
-  margin-right: 0.4rem;
-  color: var(--amber);
-  vertical-align: baseline;
-}
-
-.card-divider {
-  height: 1px;
-  background: var(--border);
-  margin-bottom: 1rem;
-}
-
-/* ── Metadata Rows ── */
-
-.card-meta-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 0.85rem;
-}
-
-.meta-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  color: var(--text-ghost);
-}
-
-.meta-value {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  color: var(--text);
-  text-align: left;
-  line-height: 1.45;
-}
-
-/* ── Collapsible card meta — keeps grid/list cards a uniform height by
-   default; long lore/care/watch text only grows the card on request ── */
-
-.card-meta-collapsed {
-  max-height: 4.75rem;
-  overflow: hidden;
-  position: relative;
-}
-
-.card-meta-collapsed::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1.75rem;
-  background: linear-gradient(to bottom, transparent, var(--panel));
-}
-
-.card-expand-toggle {
-  display: block;
-  margin-top: 0.5rem;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  color: var(--lime-dim);
-  background: none;
-  border: none;
-  padding: 0;
+  font-weight: 700;
+  font-size: 16px;
   cursor: pointer;
 }
 
-.card-expand-toggle:hover {
-  color: var(--lime);
-  text-shadow: var(--glow-sm);
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
 }
 
-/* ── Card Actions ── */
+.account-menu-item {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
 
-.card-actions {
+.account-menu-item:hover {
+  background: rgba(170, 255, 0, 0.1);
+}
+
+/* ── Section headings ── */
+
+.section-head {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 0 10px;
 }
 
-/* ── Auth Screen ── */
+.section-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text);
+}
 
-.auth-screen {
+.section-count {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--amber);
+}
+
+/* ── Today row — horizontal, swipeable on phones ── */
+
+.today-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  gap: 10px;
+  overflow-x: auto;
+  /* bleed to the screen edge so cards scroll out of view naturally,
+     then pad back in so the first card lines up with the page */
+  margin: 0 -20px;
+  padding: 0 20px 16px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
 }
 
-.auth-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 3rem;
-  text-align: center;
+.today-row::-webkit-scrollbar {
+  display: none;
+}
+
+.today-card {
+  flex: 0 0 148px;
+  scroll-snap-align: start;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid rgba(255, 176, 0, 0.45);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  align-items: center;
-  position: relative;
+  gap: 4px;
 }
 
-.auth-prompt {
+.today-label {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
   color: var(--amber);
-  text-shadow: 0 0 8px var(--amber);
 }
 
-.auth-status {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 3px;
-  color: var(--text-dim);
-  padding: 2rem;
+.today-name {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ── Responsive ── */
-
-@media (max-width: 768px) {
-  .site-header {
-    padding: 1.5rem;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
-
-  .add-plant-section,
-  .catalog-section {
-    padding: 0 1.5rem 3rem;
-  }
-
-  .plant-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .add-plant-form {
-    flex-direction: column;
-  }
-
-  .field {
-    width: 100%;
-  }
+.today-detail {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 4px;
 }
-/* ── Catalog toolbar — search + view toggle ── */
 
-.catalog-toolbar {
+.today-done {
+  margin-top: auto;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--amber);
+  color: #1a1000;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Drama gets the magenta treatment everywhere it appears */
+.today-drama {
+  border-color: rgba(255, 77, 255, 0.5);
+}
+
+.today-drama .today-label {
+  color: var(--magenta-soft);
+}
+
+.today-drama .today-done {
+  background: var(--magenta);
+  color: #1a001a;
+}
+
+/* ── Filter chips ── */
+
+.chip-row {
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 4px 0 12px;
 }
 
-.catalog-toolbar .section-label {
-  margin-bottom: 0;
+.chip {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
 }
 
-.toolbar-controls {
+.chip-active {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: #0a1400;
+  font-weight: 700;
+}
+
+.chip-drama {
+  border-color: rgba(255, 77, 255, 0.45);
+  color: var(--magenta-soft);
+}
+
+.chip-drama.chip-active {
+  border-color: var(--magenta);
+  background: var(--magenta);
+  color: #1a001a;
+}
+
+/* ── Toolbar — search + grid/list toggle ── */
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-3);
 }
 
-.search-field {
-  min-width: 240px;
-  flex: none;
+.search:focus-within {
+  border-color: var(--lime);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px; /* 16px stops iOS from zooming in on focus */
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--text-3);
 }
 
 .view-toggle {
   display: flex;
-  border: 1px solid var(--border);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .view-toggle-btn {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  padding: 0.6rem 1rem;
+  min-height: 44px;
+  padding: 0 14px;
   border: none;
-  background: rgba(170,255,0,0.04);
-  color: var(--text-dim);
+  background: var(--surface);
+  color: var(--text-2);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .view-toggle-btn + .view-toggle-btn {
-  border-left: 1px solid var(--border);
-}
-
-.view-toggle-btn:hover {
-  color: var(--lime);
+  border-left: 1px solid var(--line);
 }
 
 .view-toggle-active {
-  background: rgba(170,255,0,0.15);
+  background: rgba(170, 255, 0, 0.16);
   color: var(--lime);
-  text-shadow: var(--glow-sm);
+}
+
+/* ── Plant grid ── */
+
+.plant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  /* rows size to their own content, so an open card doesn't stretch
+     the card next to it */
+  align-items: start;
+}
+
+.plant-grid-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .catalog-empty {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 2px;
-  color: var(--text-ghost);
   grid-column: 1 / -1;
-  padding: 2rem 0;
+  padding: 32px 0;
+  color: var(--text-2);
+  text-align: center;
 }
-
-/* ── Group headers — "needs attention" vs "all specimens" split ── */
 
 .group-header {
   grid-column: 1 / -1;
+  margin-top: 8px;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  font-weight: 700;
-  margin: 0.5rem 0 0.25rem;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
 
 .group-header-attention {
   color: var(--amber);
-  text-shadow: 0 0 8px var(--amber);
 }
 
-.group-header-all {
-  color: var(--lime);
-  text-shadow: var(--glow-sm);
-}
-
-/* ── Plant card — media + body split so list view can lay them side by side ── */
+/* ── Plant card ── */
 
 .plant-card {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+/* featured (needs attention) and open cards take the whole row */
+.card-featured,
+.card-open {
+  grid-column: 1 / -1;
+  border-radius: var(--radius-lg);
+}
+
+.card-attention {
+  border-color: rgba(255, 176, 0, 0.4);
+}
+
+.card-drama {
+  border-color: rgba(255, 77, 255, 0.45);
 }
 
 .card-media {
-  width: 100%;
-  height: 160px;
-  flex-shrink: 0;
-  background: var(--void2);
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
+  position: relative;
+  height: 180px;
+  background: var(--surface-2);
+}
+
+.card-featured .card-media {
+  height: 220px;
+}
+
+.card-list .card-media {
+  height: 128px;
 }
 
 .card-media-open {
@@ -738,221 +390,560 @@ select.field option {
 }
 
 .card-media-placeholder {
-  width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 3px;
-  color: var(--text-ghost);
-  background:
-    repeating-linear-gradient(
-      45deg,
-      rgba(170,255,0,0.03),
-      rgba(170,255,0,0.03) 10px,
-      transparent 10px,
-      transparent 20px
-    );
+  /* sit above the name bar's center, not behind it */
+  padding-bottom: 56px;
+  color: #4d7322;
 }
+
+.status-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  /* leave room for the "more" button in the opposite corner */
+  max-width: calc(100% - 76px);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill-attention {
+  background: var(--amber);
+  color: #1a1000;
+}
+
+.pill-drama {
+  background: var(--magenta);
+  color: #1a001a;
+}
+
+.card-more {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--scrim);
+}
+
+/* name bar — a solid scrim (not a gradient) so text stays readable over
+   any photo, bright or dark */
+.card-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 14px;
+  background: var(--scrim);
+}
+
+.card-caption-text {
+  flex: 1;
+  min-width: 0; /* lets long names ellipsize instead of pushing the button out */
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-featured .card-name,
+.card-list .card-name {
+  font-size: 22px;
+}
+
+.card-species {
+  font-size: 14px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Round icon buttons ── */
+
+.round-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.round-btn:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.round-btn-lime {
+  border-color: var(--lime);
+  background: rgba(170, 255, 0, 0.14);
+  color: var(--lime);
+}
+
+/* ── Card details drawer ── */
 
 .card-body {
-  padding: 1.5rem;
-  flex: 1;
-  min-width: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* list layout — image beside content instead of stacked on top */
-.plant-grid-list {
-  grid-template-columns: 1fr;
+.card-cultivar {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text-3);
 }
 
-.card-list {
-  flex-direction: row;
-  align-items: stretch;
+.meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.card-list .card-media {
-  width: 140px;
-  height: auto;
-  border-bottom: none;
-  border-right: 1px solid var(--border);
+.meta-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
 
-/* ── Photo picker — hides the native file input behind a themed label ── */
+.meta-value {
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.lore-value {
+  font-style: italic;
+}
+
+/* ── Buttons ── */
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-primary {
+  min-height: 48px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 24px;
+  background: var(--lime);
+  color: #0a1400;
+  font-weight: 700;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: var(--glow);
+}
+
+.btn-primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  border-color: var(--lime);
+}
+
+.btn-danger {
+  border-color: rgba(255, 176, 0, 0.4);
+  color: var(--amber-soft);
+}
+
+.btn-danger:hover {
+  border-color: var(--amber);
+}
+
+/* ── Form fields ── */
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.field {
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  outline: none;
+}
+
+.field::placeholder {
+  color: var(--text-3);
+}
+
+.field:focus {
+  border-color: var(--lime);
+}
 
 .photo-picker {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.photo-picker-btn {
-  display: inline-block;
-}
-
+/* the native file input is hidden; its <label> is the visible button */
 .photo-picker-input {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
 }
 
 .photo-picker-name {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 1px;
-  color: var(--text-ghost);
+  font-size: 14px;
+  color: var(--text-2);
 }
 
 .photo-preview {
-  margin-top: 0.75rem;
-  max-width: 160px;
-  max-height: 160px;
+  margin-top: 8px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
-  border: 1px solid var(--border-bright);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
 }
 
-/* ── Card action rows — primary CTA separated from secondary icon actions ── */
+/* ── Care log timeline ── */
 
-.card-actions-primary {
-  margin-top: 1.25rem;
+.care-timeline {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
-.care-cta {
-  width: 100%;
-  text-align: center;
+.timeline-empty {
+  color: var(--text-2);
 }
 
-.card-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border);
-}
-
-.btn-icon {
+.timeline-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
+  gap: 4px;
+}
+
+.timeline-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.dot-lime {
+  background: var(--lime);
+}
+
+.dot-drama {
+  background: var(--magenta);
+}
+
+.timeline-content {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-type {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.timeline-date {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 1px;
-  padding: 0.5rem 0.4rem;
-  border: 1px solid var(--border);
-  color: var(--lime);
-  background: rgba(170,255,0,0.04);
-  border-radius: 2px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.timeline-notes {
+  margin-top: 2px;
+  color: var(--text-2);
+}
+
+.timeline-delete {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-icon:hover {
-  border-color: var(--lime);
-  box-shadow: var(--glow-sm);
-}
-
-.btn-icon-danger {
+.timeline-delete:hover {
   color: var(--amber);
-  border-color: rgba(255,176,0,0.3);
 }
 
-.btn-icon-danger:hover {
-  border-color: var(--amber);
-  box-shadow: 0 0 12px rgba(255,176,0,0.4);
+/* ── Floating bottom bar ── */
+
+.bottom-bar {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  transform: translateX(-50%);
+  /* env() keeps it above the iPhone home indicator */
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  width: min(350px, calc(100% - 40px));
+  height: 64px;
+  padding: 0 8px;
+  border-radius: 32px;
+  background: rgba(20, 34, 8, 0.94);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  backdrop-filter: blur(12px);
 }
 
-@media (max-width: 768px) {
-  .catalog-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .toolbar-controls {
-    width: 100%;
-  }
-
-  .search-field {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .card-list {
-    flex-direction: column;
-  }
-
-  .card-list .card-media {
-    width: 100%;
-    height: 160px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+.bar-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-/* ── Phone-sized screens — tighten the letter-spacing/padding that reads
-   fine on tablets but crowds or wraps awkwardly on a narrow phone ── */
-
-@media (max-width: 480px) {
-  .site-title {
-    font-size: 0.85rem;
-    letter-spacing: 3px;
-  }
-
-  .site-eyebrow {
-    letter-spacing: 2px;
-  }
-
-  main {
-    padding-top: 56px;
-  }
-
-  .card-body {
-    padding: 1.1rem;
-  }
-
-  .card-actions {
-    flex-wrap: wrap;
-  }
-
-  .btn-icon {
-    min-width: 30%;
-  }
-
-  .view-toggle,
-  .search-field {
-    width: 100%;
-  }
-
-  .view-toggle-btn {
-    flex: 1;
-    text-align: center;
-  }
-
-  .toolbar-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.bar-btn-active {
+  background: rgba(170, 255, 0, 0.14);
+  color: var(--lime);
 }
 
-/* ── Photo Lightbox — full-size view on click, dismiss via backdrop/×/Esc ── */
+.bar-fab {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: var(--lime);
+  color: #0a1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glow);
+  cursor: pointer;
+}
+
+/* ── Bottom sheets (quick picker, add plant) ── */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(3, 5, 0, 0.75);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line-strong);
+  animation: sheet-up 0.22s ease-out;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* respect "reduce motion" accessibility settings */
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation: none; }
+}
+
+.sheet-handle {
+  align-self: center;
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line-strong);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sheet-thumb {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: #4d7322;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sheet-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-title {
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--text);
+}
+
+.sheet-sub {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* the add form is long — only its fields scroll, so the Add button
+   stays in reach at the bottom */
+.sheet-scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.care-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.care-type {
+  min-height: 60px;
+  padding: 0 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.care-type-selected {
+  border: 2px solid var(--lime);
+  background: rgba(170, 255, 0, 0.16);
+  color: var(--lime-soft);
+  font-weight: 700;
+}
+
+.care-type-drama {
+  border-color: rgba(255, 77, 255, 0.5);
+  background: rgba(255, 77, 255, 0.08);
+  color: var(--magenta-soft);
+}
+
+.care-type-drama.care-type-selected {
+  border: 2px solid var(--magenta);
+  background: rgba(255, 77, 255, 0.18);
+}
+
+/* ── Photo lightbox ── */
 
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  background: rgba(4,8,0,0.92);
+  padding: 24px;
+  background: rgba(3, 5, 0, 0.94);
   cursor: zoom-out;
 }
 
@@ -960,28 +951,101 @@ select.field option {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border: 1px solid var(--border-bright);
-  box-shadow: var(--glow);
+  border-radius: var(--radius-md);
   cursor: default;
 }
 
 .lightbox-close {
   position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: 2.25rem;
-  height: 2.25rem;
-  font-size: 1.5rem;
-  line-height: 1;
-  font-family: 'Share Tech Mono', monospace;
-  color: var(--lime);
-  background: rgba(170,255,0,0.08);
-  border: 1px solid var(--border-bright);
-  border-radius: 2px;
-  cursor: pointer;
+  top: 20px;
+  right: 20px;
+  background: var(--surface);
 }
 
-.lightbox-close:hover {
-  background: rgba(170,255,0,0.2);
-  box-shadow: var(--glow-sm);
+/* ── Sign-in screen ── */
+
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 40px 28px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.auth-prompt {
+  font-size: 18px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+.auth-status {
+  position: relative;
+  z-index: 10;
+  padding: 48px 20px;
+  color: var(--text-2);
+}
+
+/* ── Wider screens ── */
+
+@media (min-width: 720px) {
+  .app-shell {
+    padding: 0 32px 128px;
+  }
+
+  .app-header {
+    padding-top: 40px;
+  }
+
+  /* on a wide screen the Today row has room to wrap instead of scroll */
+  .today-row {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin: 0;
+    padding: 0 0 16px;
+  }
+
+  .plant-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  /* featured cards are a double-width tile on desktop, not a full row */
+  .card-featured {
+    grid-column: span 2;
+  }
+
+  .card-open {
+    grid-column: 1 / -1;
+  }
+
+  .plant-grid-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sheet-backdrop {
+    align-items: center;
+  }
+
+  .sheet {
+    border-radius: 28px;
+    border: 1px solid var(--line-strong);
+  }
+
+  .sheet-handle {
+    display: none;
+  }
 }
