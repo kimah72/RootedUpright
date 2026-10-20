@@ -910,6 +910,14 @@
   cursor: pointer;
 }
 
+.timeline-saving {
+  align-self: center;
+  padding: 0 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
 .timeline-delete:hover {
   color: var(--amber);
 }
@@ -1214,23 +1222,26 @@
   box-shadow: none;
 }
 
+/* The photo keeps its own shape (a tall plant stays tall) and grows as
+   big as fits: full width, or 60% of the screen height, whichever runs
+   out first. No box around it, so there's no letterboxing. */
 .page-photo {
   display: block;
-  width: 100%;
+  align-self: center;
+  max-width: 100%;
   padding: 0;
   border: none;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--surface-2);
+  background: none;
   cursor: zoom-in;
 }
 
-/* contain, not cover — the plant page shows the whole photo, uncropped */
 .page-photo img {
   display: block;
-  width: 100%;
-  max-height: 42vh;
-  object-fit: contain;
+  max-width: 100%;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-md);
 }
 
 .page-status-row {

@@ -97,6 +97,59 @@ const CARE_TYPES = [
 
 const MS_PER_DAY = 86400000;
 
+// Load one plant's care logs, retrying once on failure. The catalog loads
+// every plant's history at the same moment, so an occasional request can
+// fail — a single retry rides out those blips. Throws if both tries fail.
+const getCareLogs = async (plantId) => {
+  const url = `${API}/carelogs?plantId=${plantId}`;
+  try {
+    return (await axios.get(url)).data;
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    return (await axios.get(url)).data;
+  }
+};
+
+// The backend reads care logs through a DynamoDB index, and an index
+// updates a moment AFTER a write. So a read right after logging can be
+// missing the new entry, and a read right after deleting can still include
+// the old one. These remember what we just did so the screen doesn't
+// flicker backwards while the index catches up. They live outside the
+// component (not in state) because changing them never needs a re-render,
+// and the app only ever has one copy of App on the page.
+const localLogs = {}; // plantId → logs saved but not yet seen from the server
+const deletedIds = new Set(); // logIds deleted this session
+
+// how close a server log's time must be to a just-saved local one to count
+// as "the same entry" (covers a small difference between clocks)
+const SAME_LOG_WINDOW_MS = 2 * 60 * 1000;
+
+const rememberLocalLogs = (plantId, logs) => {
+  localLogs[plantId] = [...(localLogs[plantId] || []), ...logs];
+};
+
+const rememberDeleted = (logId) => {
+  deletedIds.add(logId);
+};
+
+// combine a fresh server list with what we know we just changed
+const reconcileLogs = (plantId, fresh) => {
+  const logs = fresh.filter((log) => !deletedIds.has(log.logId));
+  // a local entry is confirmed once the server returns the same care type
+  // logged at about the same time; until then, keep showing it
+  const stillPending = (localLogs[plantId] || []).filter(
+    (local) =>
+      !logs.some(
+        (log) =>
+          log.careType === local.careType &&
+          Math.abs(new Date(log.dateLogged) - new Date(local.dateLogged)) <
+            SAME_LOG_WINDOW_MS,
+      ),
+  );
+  localLogs[plantId] = stillPending;
+  return [...logs, ...stillPending];
+};
+
 // "today", "1 day ago", "9 days ago" — whole days, rounded down, so a log
 // from this morning still reads as today
 const formatDaysAgo = (days) => {
@@ -281,32 +334,50 @@ function App() {
 
   // fetches every listed plant's care history in parallel, for the "needs
   // attention" grouping and the Today row
-  const fetchCareLogsForPlants = useCallback(async (plantList) => {
-    const entries = await Promise.all(
-      plantList.map(async (plant) => {
-        try {
-          const res = await axios.get(
-            `${API}/carelogs?plantId=${plant.plantId}`,
-          );
-          return [plant.plantId, res.data];
-        } catch {
-          return [plant.plantId, []];
-        }
-      }),
-    );
-    setCareLogsByPlant(Object.fromEntries(entries));
-    setCareLogsLoaded(true);
-    setNow(Date.now());
-  }, []);
+  const fetchCareLogsForPlants = useCallback(
+    async (plantList) => {
+      const entries = await Promise.all(
+        plantList.map(async (plant) => {
+          try {
+            const fresh = await getCareLogs(plant.plantId);
+            return [plant.plantId, reconcileLogs(plant.plantId, fresh)];
+          } catch {
+            // null = "couldn't load", which is NOT the same as "no logs" —
+            // treating a failed load as empty is what made plants show
+            // "No care logged" by mistake
+            return [plant.plantId, null];
+          }
+        }),
+      );
+      setCareLogsByPlant((prev) => {
+        const next = {};
+        entries.forEach(([plantId, logs]) => {
+          // on failure, keep whatever we already had for that plant
+          if (logs) next[plantId] = logs;
+          else if (prev[plantId]) next[plantId] = prev[plantId];
+        });
+        return next;
+      });
+      setCareLogsLoaded(true);
+      setNow(Date.now());
+    },
+    [],
+  );
 
   // refetches just one plant's care history — used after logging/deleting a
   // care log so its attention status updates without re-fetching everyone
-  const refreshCareLogsForPlant = useCallback(async (plantId) => {
-    const res = await axios.get(`${API}/carelogs?plantId=${plantId}`);
-    setCareLogsByPlant((prev) => ({ ...prev, [plantId]: res.data }));
-    setNow(Date.now());
-    return res.data;
-  }, []);
+  const refreshCareLogsForPlant = useCallback(
+    async (plantId) => {
+      try {
+        const logs = reconcileLogs(plantId, await getCareLogs(plantId));
+        setCareLogsByPlant((prev) => ({ ...prev, [plantId]: logs }));
+      } catch {
+        // keep showing what we have; the next refresh will catch up
+      }
+      setNow(Date.now());
+    },
+    [],
+  );
 
   const fetchPlants = useCallback(async () => {
     const userId = auth.user?.profile.sub;
@@ -445,6 +516,13 @@ function App() {
 
   // actually remove a care log on the server, then refresh that plant
   const commitDeleteCareLog = async ({ log, plantId }) => {
+    // remember the delete and drop it from the screen right away, so a
+    // lagging read can't make it pop back
+    rememberDeleted(log.logId);
+    setCareLogsByPlant((prev) => ({
+      ...prev,
+      [plantId]: (prev[plantId] || []).filter((l) => l.logId !== log.logId),
+    }));
     await axios.delete(`${API}/carelogs`, {
       data: { logId: log.logId, plantId },
     });
@@ -489,6 +567,21 @@ function App() {
         axios.post(`${API}/carelogs`, { plantId, careType, notes }),
       ),
     );
+    // show the new entries immediately, and keep them until the server's
+    // index includes them (see reconcileLogs)
+    const loggedAt = new Date().toISOString();
+    const newLogs = careTypes.map((careType) => ({
+      logId: `local-${plantId}-${careType}-${loggedAt}`,
+      plantId,
+      careType,
+      notes,
+      dateLogged: loggedAt,
+    }));
+    rememberLocalLogs(plantId, newLogs);
+    setCareLogsByPlant((prev) => ({
+      ...prev,
+      [plantId]: [...(prev[plantId] || []), ...newLogs],
+    }));
     // only plants already on the Today row get remembered there — logging
     // a plant from the catalog shouldn't add it to Today
     if (todayPlants.some((p) => p.plantId === plantId)) {
@@ -525,8 +618,11 @@ function App() {
   // true if a plant has never been logged, or not within the threshold.
   // Before care logs have loaded at least once, nothing is flagged --
   // otherwise every plant reads as overdue during the initial load.
+  // false while a plant's history couldn't be loaded — unknown isn't "none"
+  const hasLogData = (plantId) => Boolean(careLogsByPlant[plantId]);
+
   const needsAttention = (plantId) => {
-    if (!careLogsLoaded) return false;
+    if (!careLogsLoaded || !hasLogData(plantId)) return false;
     const days = daysSinceCare(plantId);
     return days === null || days >= ATTENTION_THRESHOLD_DAYS;
   };
@@ -542,6 +638,10 @@ function App() {
 
   // short status line used on cards and the Today row
   const statusFor = (plantId) => {
+    // say so honestly instead of claiming "No care logged"
+    if (careLogsLoaded && !hasLogData(plantId)) {
+      return { tone: "ok", label: "Couldn't load care", pill: "?" };
+    }
     const drama = activeDramaDays(plantId);
     if (drama !== null) {
       // day 1 = the day the drama was logged; `short` drops the word
@@ -872,13 +972,20 @@ function App() {
                             <p className="timeline-notes">{log.notes}</p>
                           )}
                         </div>
-                        <button
-                          className="timeline-delete"
-                          aria-label={`Delete ${log.careType} entry`}
-                          onClick={() => handleDeleteCareLog(log, plant.plantId)}
-                        >
-                          <IconClose />
-                        </button>
+                        {/* a just-saved entry has no real id from the
+                            server yet, so it can't be deleted until the
+                            next refresh brings the real one in */}
+                        {log.logId.startsWith("local-") ? (
+                          <span className="timeline-saving">Saved</span>
+                        ) : (
+                          <button
+                            className="timeline-delete"
+                            aria-label={`Delete ${log.careType} entry`}
+                            onClick={() => handleDeleteCareLog(log, plant.plantId)}
+                          >
+                            <IconClose />
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>
