@@ -52,6 +52,13 @@ const IconClose = () => (
   </svg>
 );
 
+// one chevron, pointed by a prop, rather than two near-identical icons
+const IconChevron = ({ direction }) => (
+  <svg {...iconProps}>
+    <path d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} />
+  </svg>
+);
+
 const IconExpand = () => (
   <svg {...iconProps} width="18" height="18">
     <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
@@ -183,6 +190,15 @@ function App() {
       }
     });
     setFocusIndex(closest);
+  };
+
+  // Slide the carousel so card `index` is centered. Used by the arrows,
+  // the dots, and clicking a faded card — a mouse has no swipe gesture, so
+  // without these the other cards were unreachable on a laptop. The scroll
+  // fires onScroll, which updates focusIndex, so nothing else to set here.
+  const scrollToToday = (index) => {
+    const card = todayRowRef.current?.children[index];
+    card?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   };
 
   // which plant the quick care picker is open for (null = closed)
@@ -944,6 +960,9 @@ function App() {
                     `today-${status.tone}`,
                     focused ? "today-focused" : "",
                   ].join(" ")}
+                  // clicking a faded side card brings it to the center
+                  // (the arrows below are the keyboard-friendly way)
+                  onClick={focused ? undefined : () => scrollToToday(index)}
                 >
                   <div className="today-thumb">
                     {plant.imageUrl ? (
@@ -963,7 +982,12 @@ function App() {
                   )}
                   <button
                     className="today-done"
-                    onClick={() => openCarePicker(plant.plantId)}
+                    onClick={(e) => {
+                      // don't let this click also trigger the card's
+                      // "bring to center" handler
+                      e.stopPropagation();
+                      openCarePicker(plant.plantId);
+                    }}
                   >
                     Done
                   </button>
@@ -972,6 +996,42 @@ function App() {
             })}
           </ul>
         )}
+
+        {/* arrows + dots — only worth showing when there's more than one */}
+        {todayPlants.length > 1 && (() => {
+          const current = Math.min(focusIndex, todayPlants.length - 1);
+          return (
+            <div className="today-nav">
+              <button
+                className="round-btn"
+                aria-label="Previous task"
+                disabled={current === 0}
+                onClick={() => scrollToToday(current - 1)}
+              >
+                <IconChevron direction="left" />
+              </button>
+              <div className="today-dots">
+                {todayPlants.map((plant, index) => (
+                  <button
+                    key={plant.plantId}
+                    className={`today-dot ${index === current ? "today-dot-active" : ""}`}
+                    aria-label={`Go to ${plant.name}`}
+                    aria-current={index === current}
+                    onClick={() => scrollToToday(index)}
+                  />
+                ))}
+              </div>
+              <button
+                className="round-btn"
+                aria-label="Next task"
+                disabled={current === todayPlants.length - 1}
+                onClick={() => scrollToToday(current + 1)}
+              >
+                <IconChevron direction="right" />
+              </button>
+            </div>
+          );
+        })()}
       </section>
 
       {/* ── Catalog ── */}

@@ -125,7 +125,7 @@
   /* bleed to the screen edge so cards scroll out of view naturally */
   margin: 0 -20px;
   /* side padding lets the first and last cards reach the center */
-  padding: 8px calc(50% - 100px) 20px;
+  padding: 8px calc(50% - 100px) 8px;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -156,6 +156,60 @@
 
 @media (prefers-reduced-motion: reduce) {
   .today-card { transition: none; }
+}
+
+/* faded side cards are clickable (they slide to the center) */
+.today-card:not(.today-focused) {
+  cursor: pointer;
+}
+
+/* ── Carousel arrows + dots ── */
+
+.today-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.today-nav .round-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.today-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* many plants → dots wrap instead of pushing the arrows off-screen */
+  max-width: 200px;
+  gap: 2px;
+}
+
+/* the dot you see is small, but the button around it is a comfortable
+   24px tap target */
+.today-dot {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.today-dot::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: background 0.2s, inset 0.2s;
+}
+
+.today-dot-active::after {
+  inset: 8px;
+  background: var(--lime);
 }
 
 .today-thumb {
