@@ -989,7 +989,9 @@ function App() {
                       openCarePicker(plant.plantId);
                     }}
                   >
-                    Done
+                    {/* "Log care", not "Done" — it only opens the picker;
+                        nothing is saved until a care type is chosen */}
+                    Log care
                   </button>
                 </li>
               );
