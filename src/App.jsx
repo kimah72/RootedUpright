@@ -185,6 +185,10 @@ function App() {
   // care logs per plantId, loaded alongside the catalog so the "needs
   // attention" grouping and the Today row have real history to work from
   const [careLogsByPlant, setCareLogsByPlant] = useState({});
+  // true once care logs have loaded at least once — until then, nothing is
+  // flagged as needing attention, since careLogsByPlant starts empty and
+  // would otherwise make every plant look overdue during the initial load
+  const [careLogsLoaded, setCareLogsLoaded] = useState(false);
   // snapshot of "now" for the attention calculation below — captured
   // alongside the fetches rather than read via Date.now() during render,
   // since render must stay pure
@@ -251,6 +255,7 @@ function App() {
       }),
     );
     setCareLogsByPlant(Object.fromEntries(entries));
+    setCareLogsLoaded(true);
     setNow(Date.now());
   }, []);
 
@@ -456,8 +461,11 @@ function App() {
     return last ? (now - last.getTime()) / MS_PER_DAY : null;
   };
 
-  // true if a plant has never been logged, or not within the threshold
+  // true if a plant has never been logged, or not within the threshold.
+  // Before care logs have loaded at least once, nothing is flagged --
+  // otherwise every plant reads as overdue during the initial load.
   const needsAttention = (plantId) => {
+    if (!careLogsLoaded) return false;
     const days = daysSinceCare(plantId);
     return days === null || days >= ATTENTION_THRESHOLD_DAYS;
   };
