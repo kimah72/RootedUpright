@@ -52,11 +52,9 @@ const IconClose = () => (
   </svg>
 );
 
-const IconMore = () => (
-  <svg {...iconProps}>
-    <circle cx="5" cy="12" r="1" />
-    <circle cx="12" cy="12" r="1" />
-    <circle cx="19" cy="12" r="1" />
+const IconExpand = () => (
+  <svg {...iconProps} width="18" height="18">
+    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
   </svg>
 );
 
@@ -164,6 +162,29 @@ function App() {
   // the search input is focused from the bottom bar's search button
   const searchRef = useRef(null);
 
+  // Today carousel — which card is centered (it gets drawn larger)
+  const [focusIndex, setFocusIndex] = useState(0);
+  const todayRowRef = useRef(null);
+  // On scroll, find the card whose center is closest to the row's center.
+  // Measuring real positions (instead of dividing scrollLeft by a card
+  // width) keeps this correct even though the cards change size.
+  const handleTodayScroll = () => {
+    const row = todayRowRef.current;
+    if (!row) return;
+    const rowCenter = row.scrollLeft + row.clientWidth / 2;
+    let closest = 0;
+    let closestDistance = Infinity;
+    [...row.children].forEach((card, index) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - rowCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closest = index;
+      }
+    });
+    setFocusIndex(closest);
+  };
+
   // which plant the quick care picker is open for (null = closed)
   const [loggingId, setLoggingId] = useState(null);
   const [careForm, setCareForm] = useState({
@@ -197,16 +218,28 @@ function App() {
   // full-size photo currently open in the lightbox (null = closed)
   const [lightboxPlant, setLightboxPlant] = useState(null);
 
-  // which cards have their details drawer (lore, care, actions) open —
-  // cards stay photo-first by default and only grow on request
-  const [expandedIds, setExpandedIds] = useState(() => new Set());
-  const toggleExpanded = (plantId) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(plantId)) next.delete(plantId);
-      else next.add(plantId);
-      return next;
-    });
+  // which plant's card is open to its full details (null = none). A single
+  // id rather than a set, so opening one card automatically closes the
+  // last one — only one plant page is open at a time.
+  const [openId, setOpenId] = useState(null);
+  // card DOM nodes by plantId, so a newly opened card can be scrolled into
+  // view (opening one card can shift the others around it)
+  const cardRefs = useRef({});
+  const toggleOpen = (plantId) => {
+    const opening = openId !== plantId;
+    setOpenId(opening ? plantId : null);
+    // leaving a card also leaves its edit form and timeline
+    setEditingId(null);
+    setViewingLogsId(null);
+    if (opening) {
+      // wait one frame so the card has its new, larger size before scrolling
+      requestAnimationFrame(() =>
+        cardRefs.current[plantId]?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      );
+    }
   };
 
   // Escape closes whichever overlay is on top — one listener for all of
@@ -558,7 +591,7 @@ function App() {
   const renderPlantCard = (plant) => {
     const status = statusFor(plant.plantId);
     const isEditing = editingId === plant.plantId;
-    const isExpanded = expandedIds.has(plant.plantId);
+    const isOpen = openId === plant.plantId;
     // in grid view, plants that need attention get the big featured card
     // so they're impossible to miss
     const featured = viewMode === "grid" && status.tone !== "ok";
@@ -566,31 +599,38 @@ function App() {
     return (
       <article
         key={plant.plantId}
+        ref={(node) => {
+          cardRefs.current[plant.plantId] = node;
+        }}
         className={[
           "plant-card",
           viewMode === "list" ? "card-list" : "",
           featured ? "card-featured" : "",
           `card-${status.tone}`,
-          isEditing || isExpanded ? "card-open" : "",
+          isOpen ? "card-open" : "",
         ].join(" ")}
       >
-        {/* photo — falls back to a leaf placeholder when none is set;
-            tap to open full-size */}
         <div className="card-media">
+          {/* photo — falls back to a leaf placeholder when none is set */}
           {plant.imageUrl ? (
-            <button
-              type="button"
-              className="card-media-open"
-              onClick={() => setLightboxPlant(plant)}
-              aria-label={`View full-size photo of ${plant.name || "plant"}`}
-            >
-              <img src={plant.imageUrl} alt="" />
-            </button>
+            <img src={plant.imageUrl} alt="" />
           ) : (
             <div className="card-media-placeholder">
               <IconLeaf />
             </div>
           )}
+
+          {/* One invisible button covers the whole photo area, so tapping
+              anywhere on the card opens (or closes) it. It's a real button
+              rather than an onClick on the div so keyboards and screen
+              readers can use it too. The + button below sits above it. */}
+          <button
+            type="button"
+            className="card-tap"
+            aria-expanded={isOpen}
+            aria-label={`${isOpen ? "Close" : "Open"} ${plant.name || "plant"}`}
+            onClick={() => toggleOpen(plant.plantId)}
+          />
 
           {/* status pill only when there's something to act on — a calm
               plant's status lives in the caption instead */}
@@ -600,17 +640,18 @@ function App() {
             </span>
           )}
 
-          {/* details toggle lives in the photo's top corner (not the name
-              bar) so narrow two-column cards still have room for the name */}
-          <button
-            type="button"
-            className="round-btn card-more"
-            aria-label={`More about ${plant.name}`}
-            aria-expanded={isExpanded}
-            onClick={() => toggleExpanded(plant.plantId)}
-          >
-            <IconMore />
-          </button>
+          {/* full-size photo button only appears on an open card, since a
+              tap on the photo itself now opens the card */}
+          {isOpen && plant.imageUrl && (
+            <button
+              type="button"
+              className="round-btn card-zoom"
+              aria-label={`View full-size photo of ${plant.name}`}
+              onClick={() => setLightboxPlant(plant)}
+            >
+              <IconExpand />
+            </button>
+          )}
 
           {/* name bar sits over the photo so the plant stays the hero */}
           <div className="card-caption">
@@ -632,7 +673,7 @@ function App() {
         </div>
 
         {/* ── Edit mode ── */}
-        {isEditing && (
+        {isOpen && isEditing && (
           <div className="card-body edit-form">
             {[
               ["name", "Plant name"],
@@ -707,8 +748,9 @@ function App() {
           </div>
         )}
 
-        {/* ── Details drawer — lore, care, and the less frequent actions ── */}
-        {!isEditing && isExpanded && (
+        {/* ── Plant page — everything about this plant, shown only while
+            the card is open ── */}
+        {isOpen && !isEditing && (
           <div className="card-body">
             {plant.cultivar && (
               <p className="card-cultivar">{plant.cultivar}</p>
@@ -861,27 +903,59 @@ function App() {
           <h2 id="today-heading" className="section-title">
             Today
           </h2>
+          {/* a gentler summary than a raw task count — splitting drama
+              from routine check-ins makes the list feel less like a pile */}
           <span className="section-count">
             {todayPlants.length === 0
               ? "ALL CAUGHT UP"
-              : `${todayPlants.length} ${todayPlants.length === 1 ? "TASK" : "TASKS"}`}
+              : [
+                  dramaPlants.length > 0 && `${dramaPlants.length} DRAMA`,
+                  todayPlants.length > dramaPlants.length &&
+                    `${todayPlants.length - dramaPlants.length} CHECK-IN${
+                      todayPlants.length - dramaPlants.length === 1 ? "" : "S"
+                    }`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
           </span>
         </div>
         {todayPlants.length > 0 && (
-          <ul className="today-row">
-            {todayPlants.map((plant) => {
+          <ul
+            className="today-row"
+            ref={todayRowRef}
+            onScroll={handleTodayScroll}
+          >
+            {todayPlants.map((plant, index) => {
               const status = statusFor(plant.plantId);
+              // clamp so the last card still focuses if the list shrinks
+              // (e.g. right after logging care removes a card)
+              const focused =
+                index === Math.min(focusIndex, todayPlants.length - 1);
               return (
-                <li key={plant.plantId} className={`today-card today-${status.tone}`}>
+                <li
+                  key={plant.plantId}
+                  className={[
+                    "today-card",
+                    `today-${status.tone}`,
+                    focused ? "today-focused" : "",
+                  ].join(" ")}
+                >
+                  <div className="today-thumb">
+                    {plant.imageUrl ? (
+                      <img src={plant.imageUrl} alt="" />
+                    ) : (
+                      <IconLeaf />
+                    )}
+                  </div>
                   <span className="today-label">
-                    {status.tone === "drama" ? "DRAMA" : "CHECK IN"}
+                    {status.tone === "drama"
+                      ? `DRAMA · ${status.short.toUpperCase()}`
+                      : "CHECK IN"}
                   </span>
                   <span className="today-name">{plant.name}</span>
-                  {/* the DRAMA label already says what it is, so drama
-                      cards only need the day count here */}
-                  <span className="today-detail">
-                    {status.short || status.label}
-                  </span>
+                  {status.tone !== "drama" && (
+                    <span className="today-detail">{status.label}</span>
+                  )}
                   <button
                     className="today-done"
                     onClick={() => openCarePicker(plant.plantId)}

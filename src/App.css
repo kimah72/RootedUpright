@@ -112,17 +112,21 @@
   color: var(--amber);
 }
 
-/* ── Today row — horizontal, swipeable on phones ── */
+/* ── Today row — Focus carousel ──
+   Every card is the same width; the centered one is drawn full size and
+   the rest are scaled down and faded. Using transform (not width) for the
+   size change means neighbors never get shoved around mid-swipe. */
 
 .today-row {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 4px;
   overflow-x: auto;
-  /* bleed to the screen edge so cards scroll out of view naturally,
-     then pad back in so the first card lines up with the page */
+  /* bleed to the screen edge so cards scroll out of view naturally */
   margin: 0 -20px;
-  padding: 0 20px 16px;
-  scroll-snap-type: x proximity;
+  /* side padding lets the first and last cards reach the center */
+  padding: 8px calc(50% - 100px) 20px;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 
@@ -131,15 +135,45 @@
 }
 
 .today-card {
-  flex: 0 0 148px;
-  scroll-snap-align: start;
+  flex: 0 0 200px;
+  scroll-snap-align: center;
   padding: 12px;
-  border-radius: var(--radius-md);
+  border-radius: 22px;
   background: var(--surface);
   border: 1px solid rgba(255, 176, 0, 0.45);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  transform: scale(0.84);
+  opacity: 0.55;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.today-focused {
+  transform: scale(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-card { transition: none; }
+}
+
+.today-thumb {
+  height: 96px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: #4d7322;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.today-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .today-label {
@@ -372,14 +406,42 @@
   height: 128px;
 }
 
-.card-media-open {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0;
+/* invisible button stretched over the whole photo area — this is what
+   makes "tap anywhere on the card" work */
+.card-tap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   border: none;
-  background: none;
-  cursor: zoom-in;
+  background: transparent;
+  cursor: pointer;
+  border-radius: inherit;
+}
+
+/* the pill, caption and zoom button sit above the tap layer; the pill
+   and caption text let taps fall through to it, while the real buttons
+   inside them stay clickable */
+.status-pill,
+.card-caption {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card-caption .round-btn,
+.card-zoom {
+  pointer-events: auto;
+}
+
+.card-zoom {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  background: var(--scrim);
+}
+
+.plant-card:hover {
+  border-color: var(--line-strong);
 }
 
 .card-media img {
@@ -403,7 +465,7 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  /* leave room for the "more" button in the opposite corner */
+  /* leave room for the full-size photo button in the opposite corner */
   max-width: calc(100% - 76px);
   padding: 4px 10px;
   border-radius: 12px;
@@ -422,13 +484,6 @@
 .pill-drama {
   background: var(--magenta);
   color: #1a001a;
-}
-
-.card-more {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: var(--scrim);
 }
 
 /* name bar — a solid scrim (not a gradient) so text stays readable over
@@ -1010,12 +1065,10 @@
     padding-top: 40px;
   }
 
-  /* on a wide screen the Today row has room to wrap instead of scroll */
+  /* the carousel stays a carousel on wide screens, just without the
+     phone's edge-to-edge bleed */
   .today-row {
-    flex-wrap: wrap;
-    overflow: visible;
     margin: 0;
-    padding: 0 0 16px;
   }
 
   .plant-grid {
