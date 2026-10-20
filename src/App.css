@@ -1285,10 +1285,12 @@
   gap: 12px;
   padding: 6px 6px 6px 18px;
   border-radius: 28px;
-  background: var(--text);
-  color: #0a1400;
+  /* dark inside with a thin lime outline, to match the app's cards */
+  background: var(--surface);
+  border: 1px solid var(--lime);
+  color: var(--text);
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .toast-action {
@@ -1296,8 +1298,9 @@
   padding: 0 18px;
   border: none;
   border-radius: 22px;
-  background: #0a1400;
-  color: var(--lime);
+  /* filled lime so Undo is the obvious thing to tap */
+  background: var(--lime);
+  color: #0a1400;
   font-weight: 700;
   cursor: pointer;
 }
