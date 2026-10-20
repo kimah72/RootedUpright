@@ -158,6 +158,21 @@
   .today-card { transition: none; }
 }
 
+/* logged this session — calm lime outline, quieter button */
+.today-complete {
+  border-color: rgba(170, 255, 0, 0.4);
+}
+
+.today-complete .today-label {
+  color: var(--lime);
+}
+
+.today-complete .today-done {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+
 /* faded side cards are clickable (they slide to the center) */
 .today-card:not(.today-focused) {
   cursor: pointer;
@@ -431,9 +446,8 @@
   overflow: hidden;
 }
 
-/* featured (needs attention) and open cards take the whole row */
-.card-featured,
-.card-open {
+/* featured (needs attention) cards take the whole row */
+.card-featured {
   grid-column: 1 / -1;
   border-radius: var(--radius-lg);
 }
@@ -448,12 +462,25 @@
 
 .card-media {
   position: relative;
-  height: 180px;
+}
+
+/* Portrait photos (4:5) in the grid — plants grow up, so a wide crop
+   cuts off the interesting part. The box shape comes from aspect-ratio,
+   so it stays portrait at any card width. */
+.plant-card:not(.card-list) .card-media > img,
+.plant-card:not(.card-list) .card-media-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
   background: var(--surface-2);
 }
 
-.card-featured .card-media {
-  height: 220px;
+/* featured cards span the full phone width, so a square keeps them from
+   getting taller than the screen */
+.card-featured:not(.card-list) .card-media > img,
+.card-featured:not(.card-list) .card-media-placeholder {
+  aspect-ratio: 1 / 1;
+  max-height: 380px;
 }
 
 /* ── List view — compact rows ──
@@ -513,12 +540,6 @@
   display: none;
 }
 
-.card-list .card-zoom {
-  top: 50%;
-  right: 64px;
-  transform: translateY(-50%);
-}
-
 /* tint the status line by tone in list rows only — prefixed with
    .card-list so these beat the plain .card-species color defined later */
 .card-list .species-attention {
@@ -550,18 +571,10 @@
   pointer-events: none;
 }
 
-.card-caption .round-btn,
-.card-zoom {
+.card-caption .round-btn {
   pointer-events: auto;
 }
 
-.card-zoom {
-  position: absolute;
-  z-index: 2;
-  top: 8px;
-  right: 8px;
-  background: var(--scrim);
-}
 
 .plant-card:hover {
   border-color: var(--line-strong);
@@ -575,12 +588,9 @@
 }
 
 .card-media-placeholder {
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* sit above the name bar's center, not behind it */
-  padding-bottom: 56px;
   color: #4d7322;
 }
 
@@ -609,18 +619,14 @@
   color: #1a001a;
 }
 
-/* name bar — a solid scrim (not a gradient) so text stays readable over
-   any photo, bright or dark */
+/* name bar — sits below the photo instead of over it, so the whole
+   plant stays visible */
 .card-caption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 10px 10px 14px;
-  background: var(--scrim);
 }
 
 .card-caption-text {
@@ -1203,10 +1209,6 @@
     grid-column: span 2;
   }
 
-  .card-open {
-    grid-column: 1 / -1;
-  }
-
   .plant-grid-list {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1223,4 +1225,89 @@
   .sheet-handle {
     display: none;
   }
+}
+
+/* ── Plant page (overlay) ── */
+
+/* the scroll area clips overflow, which would cut the button's glow
+   into a hard-edged box — drop the glow inside it */
+.sheet-scroll .btn-primary {
+  box-shadow: none;
+}
+
+.page-photo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-2);
+  cursor: zoom-in;
+}
+
+/* contain, not cover — the plant page shows the whole photo, uncropped */
+.page-photo img {
+  display: block;
+  width: 100%;
+  max-height: 42vh;
+  object-fit: contain;
+}
+
+.page-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-status {
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.page-status-attention {
+  color: var(--amber-soft);
+}
+
+.page-status-drama {
+  color: var(--magenta-soft);
+}
+
+.care-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Undo bar ── */
+
+.toast {
+  position: fixed;
+  z-index: 70; /* above sheets (50) so it shows over the plant page */
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  width: min(350px, calc(100% - 40px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 6px 6px 18px;
+  border-radius: 28px;
+  background: var(--text);
+  color: #0a1400;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.toast-action {
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 22px;
+  background: #0a1400;
+  color: var(--lime);
+  font-weight: 700;
+  cursor: pointer;
 }

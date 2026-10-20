@@ -26,13 +26,6 @@ const IconEdit = () => (
   </svg>
 );
 
-const IconLog = () => (
-  <svg {...iconProps} width="16" height="16">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-
 const IconTrash = () => (
   <svg {...iconProps} width="16" height="16">
     <polyline points="3 6 5 6 21 6" />
@@ -56,12 +49,6 @@ const IconClose = () => (
 const IconChevron = ({ direction }) => (
   <svg {...iconProps}>
     <path d={direction === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} />
-  </svg>
-);
-
-const IconExpand = () => (
-  <svg {...iconProps} width="18" height="18">
-    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
   </svg>
 );
 
@@ -203,10 +190,17 @@ function App() {
 
   // which plant the quick care picker is open for (null = closed)
   const [loggingId, setLoggingId] = useState(null);
+  // careTypes is a list — you can log several kinds of care at once
+  // (e.g. watered AND repotted), each saved as its own care log entry
   const [careForm, setCareForm] = useState({
-    careType: "",
+    careTypes: [],
     notes: "",
   });
+
+  // care types logged this session, by plantId — keeps a plant on the
+  // Today row after you log it (marked done) so you can add more care
+  // to it later instead of it vanishing the moment it's cared for
+  const [loggedToday, setLoggedToday] = useState({});
 
   // add-plant form now lives in a sheet behind the + button instead of
   // sitting at the top of the page on every visit
@@ -214,10 +208,6 @@ function App() {
 
   // account menu (sign out) under the avatar button
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // tracks which plant's care log is expanded (null = none)
-  const [viewingLogsId, setViewingLogsId] = useState(null);
-  const [careLogs, setCareLogs] = useState([]);
 
   // care logs per plantId, loaded alongside the catalog so the "needs
   // attention" grouping and the Today row have real history to work from
@@ -234,47 +224,48 @@ function App() {
   // full-size photo currently open in the lightbox (null = closed)
   const [lightboxPlant, setLightboxPlant] = useState(null);
 
-  // which plant's card is open to its full details (null = none). A single
-  // id rather than a set, so opening one card automatically closes the
-  // last one — only one plant page is open at a time.
+  // which plant's page is open in the overlay (null = none). The page is
+  // an overlay rather than the card growing in place, so nothing in the
+  // catalog behind it moves while you edit or delete logs.
   const [openId, setOpenId] = useState(null);
-  // card DOM nodes by plantId, so a newly opened card can be scrolled into
-  // view (opening one card can shift the others around it)
-  const cardRefs = useRef({});
-  const toggleOpen = (plantId) => {
-    const opening = openId !== plantId;
-    setOpenId(opening ? plantId : null);
-    // leaving a card also leaves its edit form and timeline
-    setEditingId(null);
-    setViewingLogsId(null);
-    if (opening) {
-      // wait one frame so the card has its new, larger size before scrolling
-      requestAnimationFrame(() =>
-        cardRefs.current[plantId]?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        }),
-      );
-    }
+  const openPlant = (plantId) => {
+    setOpenId(plantId);
+    setEditingId(null); // always open on the info view, not the edit form
   };
+  const closePlant = () => {
+    setOpenId(null);
+    setEditingId(null);
+  };
+
+  // care log delete with Undo — the entry disappears right away, but the
+  // real DELETE waits a few seconds so a mis-tap can be taken back
+  const UNDO_MS = 5000;
+  // { log, plantId, timer } — the timer id rides along with the pending
+  // delete, so Undo can cancel exactly the one it belongs to
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   // Escape closes whichever overlay is on top — one listener for all of
   // them, attached only while something is actually open
   const anyOverlayOpen = Boolean(
-    lightboxPlant || loggingId || addOpen || menuOpen,
+    lightboxPlant || loggingId || addOpen || menuOpen || openId,
   );
   useEffect(() => {
     if (!anyOverlayOpen) return;
     const onKeyDown = (e) => {
       if (e.key !== "Escape") return;
-      setLightboxPlant(null);
-      setLoggingId(null);
-      setAddOpen(false);
-      setMenuOpen(false);
+      // close only the topmost layer — Esc in the care picker shouldn't
+      // also close the plant page underneath it
+      if (lightboxPlant) setLightboxPlant(null);
+      else if (loggingId) setLoggingId(null);
+      else if (addOpen) setAddOpen(false);
+      else if (openId) {
+        setOpenId(null);
+        setEditingId(null);
+      } else setMenuOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [anyOverlayOpen]);
+  }, [anyOverlayOpen, lightboxPlant, loggingId, addOpen, openId]);
 
   const [form, setForm] = useState({
     name: "",
@@ -441,6 +432,7 @@ function App() {
   // remove a plant from the catalog
   const handleDeletePlant = async (plantId) => {
     await axios.delete(`${API}/plants`, { data: { plantId } });
+    closePlant();
     fetchPlants();
   };
 
@@ -451,45 +443,65 @@ function App() {
       (a, b) => new Date(b.dateLogged) - new Date(a.dateLogged),
     );
 
-  // remove a single care log entry and refresh its timeline
-  const handleDeleteCareLog = async (logId, plantId) => {
-    await axios.delete(`${API}/carelogs`, { data: { logId, plantId } });
-    const logs = await refreshCareLogsForPlant(plantId);
-    setCareLogs(sortByDateLogged(logs));
+  // actually remove a care log on the server, then refresh that plant
+  const commitDeleteCareLog = async ({ log, plantId }) => {
+    await axios.delete(`${API}/carelogs`, {
+      data: { logId: log.logId, plantId },
+    });
+    refreshCareLogsForPlant(plantId);
+  };
+
+  // tap × → hide the entry now, delete it for real after UNDO_MS
+  const handleDeleteCareLog = (log, plantId) => {
+    // a second delete before the first one's timer ends: finish the first
+    // one now, so only one Undo is ever pending
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timer);
+      commitDeleteCareLog(pendingDelete);
+    }
+    const timer = setTimeout(() => {
+      commitDeleteCareLog({ log, plantId });
+      setPendingDelete(null);
+    }, UNDO_MS);
+    setPendingDelete({ log, plantId, timer });
+  };
+
+  const undoDeleteCareLog = () => {
+    clearTimeout(pendingDelete?.timer);
+    setPendingDelete(null);
   };
 
   // open the quick picker for one plant, starting from a clean form
   const openCarePicker = (plantId) => {
-    setCareForm({ careType: "", notes: "" });
+    setCareForm({ careTypes: [], notes: "" });
     setLoggingId(plantId);
   };
 
   // submit the quick picker — same POST the old inline form used
   const handleLogCare = async (plantId) => {
+    const { careTypes, notes } = careForm;
     // the Log button is disabled until a type is picked, but guard anyway
-    if (!careForm.careType) return;
-    await axios.post(`${API}/carelogs`, {
-      plantId,
-      careType: careForm.careType,
-      notes: careForm.notes,
-    });
-    setLoggingId(null);
-    setCareForm({ careType: "", notes: "" });
-    const logs = await refreshCareLogsForPlant(plantId);
-    // if this plant's timeline is open, show the new entry right away
-    if (viewingLogsId === plantId) setCareLogs(sortByDateLogged(logs));
-  };
-
-  // fetch care logs for a specific plant and toggle the timeline view
-  const handleViewLogs = async (plantId) => {
-    if (viewingLogsId === plantId) {
-      setViewingLogsId(null);
-      setCareLogs([]);
-      return;
+    if (careTypes.length === 0) return;
+    // one entry per care type, all sent together; the note goes on each so
+    // every entry still makes sense when read on its own in the timeline
+    await Promise.all(
+      careTypes.map((careType) =>
+        axios.post(`${API}/carelogs`, { plantId, careType, notes }),
+      ),
+    );
+    // only plants already on the Today row get remembered there — logging
+    // a plant from the catalog shouldn't add it to Today
+    if (todayPlants.some((p) => p.plantId === plantId)) {
+      setLoggedToday((prev) => ({
+        ...prev,
+        [plantId]: [...(prev[plantId] || []), ...careTypes],
+      }));
     }
-    const res = await axios.get(`${API}/carelogs?plantId=${plantId}`);
-    setCareLogs(sortByDateLogged(res.data));
-    setViewingLogsId(plantId);
+    setLoggingId(null);
+    setCareForm({ careTypes: [], notes: "" });
+    // the plant page reads straight from careLogsByPlant, so this refresh
+    // is all it takes for a new entry to show up there
+    refreshCareLogsForPlant(plantId);
   };
 
   // most recent dateLogged for a plant, or null if it has no care history.
@@ -555,12 +567,19 @@ function App() {
   // that need attention. Built from the full catalog, not the search
   // results, so typing in search never hides a plant that needs care.
   const dramaPlants = plants.filter((p) => activeDramaDays(p.plantId) !== null);
-  const todayPlants = [
+  const openTasks = [
     ...dramaPlants,
     ...plants.filter(
       (p) => activeDramaDays(p.plantId) === null && needsAttention(p.plantId),
     ),
   ];
+  // plants logged from Today this session stay on the row, after the open
+  // tasks, so more care can be added to them
+  const donePlants = plants.filter(
+    (p) => loggedToday[p.plantId] && !openTasks.includes(p),
+  );
+  const todayPlants = [...openTasks, ...donePlants];
+  const checkInCount = openTasks.length - dramaPlants.length;
   const attentionCount = plants.filter((p) => needsAttention(p.plantId)).length;
 
   // catalog search — matches name, species, or cultivar, case-insensitive
@@ -587,8 +606,10 @@ function App() {
     (p) => !needsAttention(p.plantId),
   );
 
-  // the plant the quick picker is open for, looked up fresh each render
+  // the plants the quick picker / plant page are open for, looked up
+  // fresh each render so edits show up immediately
   const loggingPlant = plants.find((p) => p.plantId === loggingId);
+  const openPlantData = plants.find((p) => p.plantId === openId);
 
   // header date line, e.g. "MONDAY · OCT 19" — derived from the `now`
   // snapshot for the same render-purity reason as above
@@ -606,8 +627,6 @@ function App() {
   // "all plants" groups so the two lists don't duplicate the JSX
   const renderPlantCard = (plant) => {
     const status = statusFor(plant.plantId);
-    const isEditing = editingId === plant.plantId;
-    const isOpen = openId === plant.plantId;
     // in grid view, plants that need attention get the big featured card
     // so they're impossible to miss
     const featured = viewMode === "grid" && status.tone !== "ok";
@@ -615,19 +634,17 @@ function App() {
     return (
       <article
         key={plant.plantId}
-        ref={(node) => {
-          cardRefs.current[plant.plantId] = node;
-        }}
         className={[
           "plant-card",
           viewMode === "list" ? "card-list" : "",
           featured ? "card-featured" : "",
           `card-${status.tone}`,
-          isOpen ? "card-open" : "",
         ].join(" ")}
       >
         <div className="card-media">
-          {/* photo — falls back to a leaf placeholder when none is set */}
+          {/* photo — falls back to a leaf placeholder when none is set.
+              Grid photos are portrait (taller than wide) because plants
+              grow up, not sideways. */}
           {plant.imageUrl ? (
             <img src={plant.imageUrl} alt="" />
           ) : (
@@ -636,16 +653,15 @@ function App() {
             </div>
           )}
 
-          {/* One invisible button covers the whole photo area, so tapping
-              anywhere on the card opens (or closes) it. It's a real button
-              rather than an onClick on the div so keyboards and screen
-              readers can use it too. The + button below sits above it. */}
+          {/* One invisible button covers the whole card, so tapping
+              anywhere opens the plant page. It's a real button rather than
+              an onClick on the div so keyboards and screen readers can use
+              it too. The + button below sits above it. */}
           <button
             type="button"
             className="card-tap"
-            aria-expanded={isOpen}
-            aria-label={`${isOpen ? "Close" : "Open"} ${plant.name || "plant"}`}
-            onClick={() => toggleOpen(plant.plantId)}
+            aria-label={`Open ${plant.name || "plant"}`}
+            onClick={() => openPlant(plant.plantId)}
           />
 
           {/* status pill only when there's something to act on — a calm
@@ -656,20 +672,7 @@ function App() {
             </span>
           )}
 
-          {/* full-size photo button only appears on an open card, since a
-              tap on the photo itself now opens the card */}
-          {isOpen && plant.imageUrl && (
-            <button
-              type="button"
-              className="round-btn card-zoom"
-              aria-label={`View full-size photo of ${plant.name}`}
-              onClick={() => setLightboxPlant(plant)}
-            >
-              <IconExpand />
-            </button>
-          )}
-
-          {/* name bar sits over the photo so the plant stays the hero */}
+          {/* name sits below the photo now, so it never covers the plant */}
           <div className="card-caption">
             <div className="card-caption-text">
               <h3 className="card-name">{plant.name}</h3>
@@ -692,145 +695,157 @@ function App() {
             </button>
           </div>
         </div>
+      </article>
+    );
+  };
 
-        {/* ── Edit mode ── */}
-        {isOpen && isEditing && (
-          <div className="card-body edit-form">
-            {[
-              ["name", "Plant name"],
-              ["species", "Species"],
-              ["cultivar", "Cultivar"],
-              ["lore", "Lore"],
-              ["careInstructions", "Care instructions"],
-              ["watchFor", "Watch for"],
-            ].map(([key, label]) => (
-              <div className="field-group" key={key}>
-                <label
-                  className="field-label"
-                  htmlFor={`edit-${key}-${plant.plantId}`}
-                >
-                  {label}
-                </label>
-                <input
-                  className="field"
-                  id={`edit-${key}-${plant.plantId}`}
-                  value={editForm[key] || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, [key]: e.target.value })
-                  }
-                />
-              </div>
-            ))}
-            <div className="field-group">
-              <span className="field-label">Photo</span>
-              <div className="photo-picker">
-                {/* the real file input is visually hidden; this label is
-                    the styled, tappable stand-in for it */}
-                <label
-                  className="btn-ghost"
-                  htmlFor={`edit-photo-${plant.plantId}`}
-                >
-                  Choose photo
-                </label>
-                <input
-                  className="photo-picker-input"
-                  type="file"
-                  id={`edit-photo-${plant.plantId}`}
-                  accept="image/*"
-                  onChange={handleEditImagePick}
-                />
-                <span className="photo-picker-name">
-                  {editImageFile
-                    ? editImageFile.name
-                    : editForm.imageUrl
-                      ? "Current photo kept"
-                      : "No photo yet"}
-                </span>
-              </div>
-              {editImagePreview && (
-                <img
-                  className="photo-preview"
-                  src={editImagePreview}
-                  alt="Selected photo preview"
-                />
-              )}
-            </div>
-            <div className="button-row">
-              <button
-                className="btn-primary"
-                onClick={() => handleEditSave(plant.plantId)}
-              >
-                Save
-              </button>
-              <button className="btn-ghost" onClick={() => setEditingId(null)}>
-                Cancel
-              </button>
-            </div>
+  // ── Plant page — everything about one plant, in an overlay ──
+  const renderPlantPage = (plant) => {
+    const status = statusFor(plant.plantId);
+    const isEditing = editingId === plant.plantId;
+    // read logs straight from the shared cache (always current after a
+    // log or delete), hiding one that's waiting out its Undo window
+    const logs = sortByDateLogged(careLogsByPlant[plant.plantId] || []).filter(
+      (log) => log.logId !== pendingDelete?.log.logId,
+    );
+
+    return (
+      <Sheet title={plant.name || "Plant"} onClose={closePlant}>
+        <div className="sheet-head">
+          <div className="sheet-head-text">
+            <h2 className="sheet-title">{plant.name}</h2>
+            <p className="sheet-sub">
+              {[plant.species, plant.cultivar].filter(Boolean).join(" · ")}
+            </p>
           </div>
-        )}
+          <button className="round-btn" aria-label="Close" onClick={closePlant}>
+            <IconClose />
+          </button>
+        </div>
 
-        {/* ── Plant page — everything about this plant, shown only while
-            the card is open ── */}
-        {isOpen && !isEditing && (
-          <div className="card-body">
-            {plant.cultivar && (
-              <p className="card-cultivar">{plant.cultivar}</p>
-            )}
-            {plant.lore && (
-              <div className="meta-row">
-                <span className="meta-label">Lore</span>
-                <p className="meta-value lore-value">{plant.lore}</p>
+        <div className="sheet-scroll">
+          {/* ── Edit mode ── */}
+          {isEditing ? (
+            <div className="edit-form">
+              {[
+                ["name", "Plant name"],
+                ["species", "Species"],
+                ["cultivar", "Cultivar"],
+                ["lore", "Lore"],
+                ["careInstructions", "Care instructions"],
+                ["watchFor", "Watch for"],
+              ].map(([key, label]) => (
+                <div className="field-group" key={key}>
+                  <label className="field-label" htmlFor={`edit-${key}`}>
+                    {label}
+                  </label>
+                  <input
+                    className="field"
+                    id={`edit-${key}`}
+                    value={editForm[key] || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, [key]: e.target.value })
+                    }
+                  />
+                </div>
+              ))}
+              <div className="field-group">
+                <span className="field-label">Photo</span>
+                <div className="photo-picker">
+                  {/* the real file input is visually hidden; this label is
+                      the styled, tappable stand-in for it */}
+                  <label className="btn-ghost" htmlFor="edit-photo">
+                    Choose photo
+                  </label>
+                  <input
+                    className="photo-picker-input"
+                    type="file"
+                    id="edit-photo"
+                    accept="image/*"
+                    onChange={handleEditImagePick}
+                  />
+                  <span className="photo-picker-name">
+                    {editImageFile
+                      ? editImageFile.name
+                      : editForm.imageUrl
+                        ? "Current photo kept"
+                        : "No photo yet"}
+                  </span>
+                </div>
+                {editImagePreview && (
+                  <img
+                    className="photo-preview"
+                    src={editImagePreview}
+                    alt="Selected photo preview"
+                  />
+                )}
               </div>
-            )}
-            {plant.careInstructions && (
-              <div className="meta-row">
-                <span className="meta-label">Care</span>
-                <p className="meta-value">{plant.careInstructions}</p>
+              <div className="button-row">
+                <button
+                  className="btn-primary"
+                  onClick={() => handleEditSave(plant.plantId)}
+                >
+                  Save
+                </button>
+                <button className="btn-ghost" onClick={() => setEditingId(null)}>
+                  Cancel
+                </button>
               </div>
-            )}
-            {plant.watchFor && (
-              <div className="meta-row">
-                <span className="meta-label">Watch for</span>
-                <p className="meta-value">{plant.watchFor}</p>
-              </div>
-            )}
-
-            <div className="button-row">
-              <button className="btn-ghost" onClick={() => handleEditOpen(plant)}>
-                <IconEdit /> Edit
-              </button>
-              <button
-                className="btn-ghost"
-                aria-pressed={viewingLogsId === plant.plantId}
-                onClick={() => handleViewLogs(plant.plantId)}
-              >
-                <IconLog />
-                {viewingLogsId === plant.plantId ? "Hide log" : "Care log"}
-              </button>
-              <button
-                className="btn-ghost btn-danger"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Delete ${plant.name || "this plant"}? This cannot be undone.`,
-                    )
-                  ) {
-                    handleDeletePlant(plant.plantId);
-                  }
-                }}
-              >
-                <IconTrash /> Delete
-              </button>
             </div>
+          ) : (
+            <>
+              {/* whole photo, never cropped (object-fit: contain) — tap for
+                  full screen */}
+              {plant.imageUrl && (
+                <button
+                  type="button"
+                  className="page-photo"
+                  aria-label={`View full-size photo of ${plant.name}`}
+                  onClick={() => setLightboxPlant(plant)}
+                >
+                  <img src={plant.imageUrl} alt="" />
+                </button>
+              )}
 
-            {/* ── Care log timeline ── */}
-            {viewingLogsId === plant.plantId && (
+              <div className="page-status-row">
+                <span className={`page-status page-status-${status.tone}`}>
+                  {status.label}
+                </span>
+                <button
+                  className="btn-primary"
+                  onClick={() => openCarePicker(plant.plantId)}
+                >
+                  Log care
+                </button>
+              </div>
+
+              {plant.lore && (
+                <div className="meta-row">
+                  <span className="meta-label">Lore</span>
+                  <p className="meta-value lore-value">{plant.lore}</p>
+                </div>
+              )}
+              {plant.careInstructions && (
+                <div className="meta-row">
+                  <span className="meta-label">Care</span>
+                  <p className="meta-value">{plant.careInstructions}</p>
+                </div>
+              )}
+              {plant.watchFor && (
+                <div className="meta-row">
+                  <span className="meta-label">Watch for</span>
+                  <p className="meta-value">{plant.watchFor}</p>
+                </div>
+              )}
+
+              {/* ── Care log — always shown on the plant page ── */}
               <div className="care-timeline">
-                {careLogs.length === 0 ? (
+                <span className="meta-label">Care log</span>
+                {logs.length === 0 ? (
                   <p className="timeline-empty">No entries yet</p>
                 ) : (
                   <ul className="timeline-list">
-                    {careLogs.map((log) => (
+                    {logs.map((log) => (
                       <li key={log.logId} className="timeline-entry">
                         <span
                           className={`timeline-dot ${log.careType === "Drama" ? "dot-drama" : "dot-lime"}`}
@@ -848,9 +863,7 @@ function App() {
                         <button
                           className="timeline-delete"
                           aria-label={`Delete ${log.careType} entry`}
-                          onClick={() =>
-                            handleDeleteCareLog(log.logId, plant.plantId)
-                          }
+                          onClick={() => handleDeleteCareLog(log, plant.plantId)}
                         >
                           <IconClose />
                         </button>
@@ -859,10 +872,30 @@ function App() {
                   </ul>
                 )}
               </div>
-            )}
-          </div>
-        )}
-      </article>
+
+              <div className="button-row">
+                <button className="btn-ghost" onClick={() => handleEditOpen(plant)}>
+                  <IconEdit /> Edit
+                </button>
+                <button
+                  className="btn-ghost btn-danger"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Delete ${plant.name || "this plant"}? This cannot be undone.`,
+                      )
+                    ) {
+                      handleDeletePlant(plant.plantId);
+                    }
+                  }}
+                >
+                  <IconTrash /> Delete plant
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Sheet>
     );
   };
 
@@ -927,14 +960,13 @@ function App() {
           {/* a gentler summary than a raw task count — splitting drama
               from routine check-ins makes the list feel less like a pile */}
           <span className="section-count">
-            {todayPlants.length === 0
+            {openTasks.length === 0 && donePlants.length === 0
               ? "ALL CAUGHT UP"
               : [
                   dramaPlants.length > 0 && `${dramaPlants.length} DRAMA`,
-                  todayPlants.length > dramaPlants.length &&
-                    `${todayPlants.length - dramaPlants.length} CHECK-IN${
-                      todayPlants.length - dramaPlants.length === 1 ? "" : "S"
-                    }`,
+                  checkInCount > 0 &&
+                    `${checkInCount} CHECK-IN${checkInCount === 1 ? "" : "S"}`,
+                  donePlants.length > 0 && `${donePlants.length} DONE`,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -948,6 +980,10 @@ function App() {
           >
             {todayPlants.map((plant, index) => {
               const status = statusFor(plant.plantId);
+              // done = logged from Today this session and no longer an
+              // open task (a drama plant stays an open task until its
+              // drama window passes)
+              const done = donePlants.includes(plant);
               // clamp so the last card still focuses if the list shrinks
               // (e.g. right after logging care removes a card)
               const focused =
@@ -957,7 +993,7 @@ function App() {
                   key={plant.plantId}
                   className={[
                     "today-card",
-                    `today-${status.tone}`,
+                    done ? "today-complete" : `today-${status.tone}`,
                     focused ? "today-focused" : "",
                   ].join(" ")}
                   // clicking a faded side card brings it to the center
@@ -972,13 +1008,22 @@ function App() {
                     )}
                   </div>
                   <span className="today-label">
-                    {status.tone === "drama"
-                      ? `DRAMA · ${status.short.toUpperCase()}`
-                      : "CHECK IN"}
+                    {done
+                      ? "✓ LOGGED"
+                      : status.tone === "drama"
+                        ? `DRAMA · ${status.short.toUpperCase()}`
+                        : "CHECK IN"}
                   </span>
                   <span className="today-name">{plant.name}</span>
-                  {status.tone !== "drama" && (
-                    <span className="today-detail">{status.label}</span>
+                  {done ? (
+                    <span className="today-detail">
+                      {/* Set removes repeats if the same type was logged twice */}
+                      {[...new Set(loggedToday[plant.plantId])].join(", ")}
+                    </span>
+                  ) : (
+                    status.tone !== "drama" && (
+                      <span className="today-detail">{status.label}</span>
+                    )
                   )}
                   <button
                     className="today-done"
@@ -991,7 +1036,7 @@ function App() {
                   >
                     {/* "Log care", not "Done" — it only opens the picker;
                         nothing is saved until a care type is chosen */}
-                    Log care
+                    {done ? "Add more" : "Log care"}
                   </button>
                 </li>
               );
@@ -1150,6 +1195,19 @@ function App() {
         </button>
       </nav>
 
+      {/* ── Plant page overlay ── */}
+      {openPlantData && renderPlantPage(openPlantData)}
+
+      {/* ── Undo bar for a just-deleted care log ── */}
+      {pendingDelete && (
+        <div className="toast" role="status">
+          <span>{pendingDelete.log.careType} deleted</span>
+          <button className="toast-action" onClick={undoDeleteCareLog}>
+            Undo
+          </button>
+        </div>
+      )}
+
       {/* ── Quick care picker ── */}
       {loggingPlant && (
         <Sheet
@@ -1178,28 +1236,40 @@ function App() {
           </div>
 
           <span className="field-label" id="care-type-label">
-            What did you do?
+            What did you do? Pick all that apply.
           </span>
           <div
             className="care-type-grid"
-            role="radiogroup"
+            role="group"
             aria-labelledby="care-type-label"
           >
-            {CARE_TYPES.map((type) => (
-              <button
-                key={type}
-                role="radio"
-                aria-checked={careForm.careType === type}
-                className={[
-                  "care-type",
-                  type === "Drama" ? "care-type-drama" : "",
-                  careForm.careType === type ? "care-type-selected" : "",
-                ].join(" ")}
-                onClick={() => setCareForm({ ...careForm, careType: type })}
-              >
-                {type}
-              </button>
-            ))}
+            {CARE_TYPES.map((type) => {
+              const selected = careForm.careTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  // aria-pressed tells screen readers each one is an
+                  // on/off toggle, since several can be on at once
+                  aria-pressed={selected}
+                  className={[
+                    "care-type",
+                    type === "Drama" ? "care-type-drama" : "",
+                    selected ? "care-type-selected" : "",
+                  ].join(" ")}
+                  // tap toggles: add it if it's off, remove it if it's on
+                  onClick={() =>
+                    setCareForm({
+                      ...careForm,
+                      careTypes: selected
+                        ? careForm.careTypes.filter((t) => t !== type)
+                        : [...careForm.careTypes, type],
+                    })
+                  }
+                >
+                  {type}
+                </button>
+              );
+            })}
           </div>
 
           <label className="field-label" htmlFor="care-note">
@@ -1215,10 +1285,14 @@ function App() {
 
           <button
             className="btn-primary btn-block"
-            disabled={!careForm.careType}
+            disabled={careForm.careTypes.length === 0}
             onClick={() => handleLogCare(loggingPlant.plantId)}
           >
-            {careForm.careType ? `Log ${careForm.careType}` : "Pick what you did"}
+            {careForm.careTypes.length === 0
+              ? "Pick what you did"
+              : careForm.careTypes.length === 1
+                ? `Log ${careForm.careTypes[0]}`
+                : `Log ${careForm.careTypes.length} kinds of care`}
           </button>
         </Sheet>
       )}
