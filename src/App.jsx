@@ -281,9 +281,13 @@ function App() {
   // an overlay rather than the card growing in place, so nothing in the
   // catalog behind it moves while you edit or delete logs.
   const [openId, setOpenId] = useState(null);
+  // care log on the plant page is hidden until asked for, so the page
+  // opens short and calm
+  const [logsOpen, setLogsOpen] = useState(false);
   const openPlant = (plantId) => {
     setOpenId(plantId);
     setEditingId(null); // always open on the info view, not the edit form
+    setLogsOpen(false); // each plant opens with its log tucked away
   };
   const closePlant = () => {
     setOpenId(null);
@@ -950,10 +954,19 @@ function App() {
                 </div>
               )}
 
-              {/* ── Care log — always shown on the plant page ── */}
+              {/* ── Care log — hidden until "Show" is tapped ── */}
               <div className="care-timeline">
-                <span className="meta-label">Care log</span>
-                {logs.length === 0 ? (
+                <button
+                  className="timeline-toggle"
+                  aria-expanded={logsOpen}
+                  onClick={() => setLogsOpen((open) => !open)}
+                >
+                  <span className="meta-label">Care log ({logs.length})</span>
+                  <span className="timeline-toggle-text">
+                    {logsOpen ? "Hide" : "Show"}
+                  </span>
+                </button>
+                {!logsOpen ? null : logs.length === 0 ? (
                   <p className="timeline-empty">No entries yet</p>
                 ) : (
                   <ul className="timeline-list">
