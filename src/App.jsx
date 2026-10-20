@@ -547,12 +547,23 @@ function App() {
       // day 1 = the day the drama was logged; `short` drops the word
       // "Drama" for places that already show it as a label
       const day = Math.floor(drama) + 1;
-      return { tone: "drama", label: `Drama · day ${day}`, short: `Day ${day}` };
+      return {
+        tone: "drama",
+        label: `Drama · day ${day}`,
+        short: `Day ${day}`,
+        pill: "Drama", // pills sit on ~108px phone tiles, so keep them tiny
+      };
     }
     const days = daysSinceCare(plantId);
-    if (days === null) return { tone: "attention", label: "No care logged" };
+    if (days === null) {
+      return { tone: "attention", label: "No care logged", pill: "New" };
+    }
     if (days >= ATTENTION_THRESHOLD_DAYS) {
-      return { tone: "attention", label: `Last care ${formatDaysAgo(days)}` };
+      return {
+        tone: "attention",
+        label: `Last care ${formatDaysAgo(days)}`,
+        pill: `${Math.floor(days)}d`,
+      };
     }
     // compact form ("Cared 2d ago") so it fits under the name on the
     // narrow two-column cards without being cut off
@@ -627,9 +638,6 @@ function App() {
   // "all plants" groups so the two lists don't duplicate the JSX
   const renderPlantCard = (plant) => {
     const status = statusFor(plant.plantId);
-    // in grid view, plants that need attention get the big featured card
-    // so they're impossible to miss
-    const featured = viewMode === "grid" && status.tone !== "ok";
 
     return (
       <article
@@ -637,7 +645,6 @@ function App() {
         className={[
           "plant-card",
           viewMode === "list" ? "card-list" : "",
-          featured ? "card-featured" : "",
           `card-${status.tone}`,
         ].join(" ")}
       >
@@ -667,8 +674,13 @@ function App() {
           {/* status pill only when there's something to act on — a calm
               plant's status lives in the caption instead */}
           {status.tone !== "ok" && (
-            <span className={`status-pill pill-${status.tone}`}>
-              {status.label}
+            <span
+              className={`status-pill pill-${status.tone}`}
+              // the full wording for screen readers and hover, since the
+              // visible pill is abbreviated to fit small tiles
+              title={status.label}
+            >
+              {status.pill}
             </span>
           )}
 
