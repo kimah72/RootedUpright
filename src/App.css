@@ -402,8 +402,77 @@
   height: 220px;
 }
 
+/* ── List view — compact rows ──
+   Same markup as the grid card, re-laid out: the photo shrinks to a
+   square thumbnail and the caption sits beside it instead of on top. */
+.plant-grid-list {
+  gap: 8px;
+}
+
+.card-list {
+  border-radius: var(--radius-md);
+}
+
 .card-list .card-media {
-  height: 128px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: transparent;
+}
+
+.card-list .card-media > img,
+.card-list .card-media-placeholder {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.card-list .card-media-placeholder {
+  padding-bottom: 0;
+}
+
+.card-list .card-media-placeholder svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* the caption joins the row as a normal flex item — no overlay, no scrim */
+.card-list .card-caption {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.card-list .card-name {
+  font-size: 18px;
+}
+
+/* status lives in the text line in list view, so the pill is redundant */
+.card-list .status-pill {
+  display: none;
+}
+
+.card-list .card-zoom {
+  top: 50%;
+  right: 64px;
+  transform: translateY(-50%);
+}
+
+/* tint the status line by tone in list rows only — prefixed with
+   .card-list so these beat the plain .card-species color defined later */
+.card-list .species-attention {
+  color: var(--amber-soft);
+}
+
+.card-list .species-drama {
+  color: var(--magenta-soft);
 }
 
 /* invisible button stretched over the whole photo area — this is what
@@ -515,8 +584,7 @@
   text-overflow: ellipsis;
 }
 
-.card-featured .card-name,
-.card-list .card-name {
+.card-featured .card-name {
   font-size: 22px;
 }
 

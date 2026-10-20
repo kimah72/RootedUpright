@@ -657,8 +657,13 @@ function App() {
           <div className="card-caption">
             <div className="card-caption-text">
               <h3 className="card-name">{plant.name}</h3>
-              <p className="card-species">
-                {status.tone === "ok" ? status.label : plant.species}
+              {/* Grid: urgent plants show species here because their status
+                  is already in the pill. List rows have no pill, so they
+                  always show the status, tinted by tone. */}
+              <p className={`card-species species-${status.tone}`}>
+                {status.tone === "ok" || viewMode === "list"
+                  ? status.label
+                  : plant.species}
               </p>
             </div>
             <button
